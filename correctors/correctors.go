@@ -1,9 +1,15 @@
-package main
+package correctors
 
 import (
+	"log"
 	"unicode"
 	"unicode/utf8"
 )
+
+// Same is the identity function
+func Same(password string) string {
+	return password
+}
 
 // SwitchCaseFirstLetter switches the case of the first letter in the string to upper case
 func SwitchCaseFirstLetter(password string) string {
@@ -38,6 +44,7 @@ func SwitchCaseAll(password string) string {
 func RemoveLastChar(password string) string {
 	lastCharRune, size := utf8.DecodeLastRuneInString(password)
 	if lastCharRune == utf8.RuneError && (size == 0 || size == 1) {
+		log.Fatal("Unable to decode the size of the last rune")
 		size = 0
 	}
 	return password[:len(password)-size]
@@ -47,6 +54,7 @@ func RemoveLastChar(password string) string {
 func RemoveFirstChar(password string) string {
 	firstCharRune, size := utf8.DecodeRuneInString(password)
 	if firstCharRune == utf8.RuneError && (size == 0 || size == 1) {
+		log.Fatal("Unable to decode the size of the first rune")
 		size = 0
 	}
 	return password[size:]

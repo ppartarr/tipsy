@@ -1,0 +1,18 @@
+{{define "title"}}Registration{{end}}
+{{define "body"}}
+<body>
+    <div class="centered registration">
+        <h1>Create an account</h1>
+        <form action="/register">
+            <input id="username" type="text" placeholder="Username"><br>
+            <input id="password" type="password" placeholder="Password"><br>
+            <input id="password-copy" type="password" placeholder="Re-type your password"><br>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+<footer>
+    <script type="text/javascript" src="/static/scripts/zxcvbn.js"></script>
+</footer>
+{{end}}

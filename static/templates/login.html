@@ -1,0 +1,17 @@
+{{define "title"}}Login{{end}}
+{{define "body"}}
+<body>
+    <div class="centered login">
+        <h1>Login</h1>
+        <form action="/login">
+            <input id="username" type="text" placeholder="Username"><br>
+            <input id="password" type="password" placeholder="Password"><br>
+
+            <button type="submit">Submit</button>
+        </form>
+        <p>If you don't have an account
+            <a href="/registration.html">register here</a>
+        </p>
+    </div>
+</body>
+{{end}}
