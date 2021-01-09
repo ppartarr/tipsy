@@ -1,12 +1,12 @@
 todo
 
-* add tests for correctors
 * make correctors modifiable
 * implement account registration (with code)
 * implement account locking
 * implement rate limiting
 * add zxcvbn by dropbox & only allow strong passwords
 * add config
+* add logout button
 
 how many passwords are pasted vs typed?
 
