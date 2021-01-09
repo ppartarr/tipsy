@@ -3,10 +3,10 @@
 <body>
     <div class="centered registration">
         <h1>Create an account</h1>
-        <form action="/register">
-            <input id="username" type="text" placeholder="Username"><br>
-            <input id="password" type="password" placeholder="Password"><br>
-            <input id="password-copy" type="password" placeholder="Re-type your password"><br>
+        <form action="/register" method="post">
+            <input id="username" type="text" placeholder="Username" name="username" required>
+            <input id="password" type="password" placeholder="Password" name="password" required>
+            <input id="password-copy" type="password" placeholder="Re-type your password" name="password-copy" required>
 
             <button type="submit">Submit</button>
         </form>

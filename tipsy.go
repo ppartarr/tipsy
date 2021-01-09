@@ -2,23 +2,24 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/ppartarr/tipsy/checkers"
 )
 
 func main() {
 	// get args from cli
-	// args := os.Args[1:]
-	// submittedPassword := args[0]
+	args := os.Args[1:]
+	submittedPassword := args[0]
 	// fmt.Println(args[0])
 
 	// numberOfCorrectors := 3go
 	// checker := "always"
-	password := "Password"
+	// password := args[0]
 
 	// load black list
 	// blackList := loadBlackList("./data/blacklistRockYou1000.txt")
@@ -26,11 +27,11 @@ func main() {
 	// CheckBlacklist(password, blacklist)
 
 	// load frequency black list
-	fmt.Println(290729 / 14344391)
-	frequencyBlacklist := loadFrequencyBlackList("./data/blacklistTest.txt")
-	fmt.Println(frequencyBlacklist)
-	CheckOptimal(password, frequencyBlacklist)
-
+	frequencyBlacklist := loadFrequencyBlackList("./data/rockyou-withcount1000.txt")
+	// frequencyBlacklist := loadFrequencyBlackList("./data/blacklistTest.txt")
+	// fmt.Println(frequencyBlacklist)
+	checkers.CheckOptimal(submittedPassword, frequencyBlacklist)
+	server()
 }
 
 func loadBlackList(filename string) []string {
@@ -54,6 +55,7 @@ func loadFrequencyBlackList(filename string) map[string]int {
 
 	for scanner.Scan() {
 		line := strings.Split(strings.TrimSpace(scanner.Text()), " ")
+		// fmt.Println(line)
 		frequency, err := strconv.Atoi(line[0])
 		word := line[1]
 
