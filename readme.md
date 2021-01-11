@@ -1,15 +1,17 @@
 todo
 
+* enforce usernames to be email addresses
 * make correctors modifiable
-* implement account locking
 * implement rate limiting
-* add zxcvbn by dropbox & only allow strong passwords
+* add zxcvbn by dropbox & only allow strong passwords to be registered
 * add config
-* add logout button
+* implement personalised typo-correcion (read paper on Tuesday)
+* if you are applying 3 checkers and rate-limiting at 10, try getting the 30th q most probable pasword in Blacklist to make sure there's never a decrease in security!
+* send mail to quentin asking for ratio of success / failure of authentications without revealing the total number of attempts
 
 how many passwords are pasted vs typed?
 
-Try get login failure rate from big companies (hint: Orange)
+try get login failure rate from big companies (hint: Orange)
 How many passwords are typed vs pasted?
 
 ## Links

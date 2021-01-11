@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -32,7 +31,7 @@ func main() {
 	// get args from cli
 	args := os.Args[1:]
 	submittedPassword := args[0]
-	// fmt.Println(args[0])
+	// log.Println(args[0])
 
 	// numberOfCorrectors := 3go
 	// checker := "always"
@@ -40,13 +39,13 @@ func main() {
 
 	// load black list
 	// blackList := loadBlackList("./data/blacklistRockYou1000.txt")
-	// fmt.Println(blackList)
+	// log.Println(blackList)
 	// CheckBlacklist(password, blacklist)
 
 	// load frequency black list
 	frequencyBlacklist := loadFrequencyBlackList("./data/rockyou-withcount1000.txt")
 	// frequencyBlacklist := loadFrequencyBlackList("./data/blacklistTest.txt")
-	// fmt.Println(frequencyBlacklist)
+	// log.Println(frequencyBlacklist)
 	checkers.CheckOptimal(submittedPassword, frequencyBlacklist)
 
 	// setup & open bolt database
@@ -65,7 +64,7 @@ func main() {
 	defer boltDB.Close()
 
 	// TODO init session
-	fmt.Println("initializing cookie store, cookies will expire after: ", time.Duration(60)*time.Second)
+	log.Println("initializing cookie store, cookies will expire after: ", time.Duration(60)*time.Second)
 	session.StorageDir = "./db"
 	session.InitStore(sessionKey, sessionDB, 60)
 
@@ -81,6 +80,7 @@ func main() {
 
 	// start listening to requests
 	log.Println("Listening on :8000...")
+
 	err = http.ListenAndServe(":8000", server)
 	if err != nil {
 		log.Fatal(err)
@@ -108,7 +108,7 @@ func loadFrequencyBlackList(filename string) map[string]int {
 
 	for scanner.Scan() {
 		line := strings.Split(strings.TrimSpace(scanner.Text()), " ")
-		// fmt.Println(line)
+		// log.Println(line)
 		frequency, err := strconv.Atoi(line[0])
 		word := line[1]
 

@@ -1,7 +1,7 @@
 package web
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -49,7 +49,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// http.HandleFunc("/register", s.UserService.Register)
 
 	if isHTML(r.URL.Path) {
-		fmt.Println(r.URL.Path)
+		log.Println(r.URL.Path)
 		// if request is for home.html, check if user has a session
 
 		// if request is for home page, check the user session
@@ -67,21 +67,22 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// 	if userID != -1 && err == nil {
 		// 		// redirect to home page
-		// 		fmt.Println("redirecting to home.html")
+		// 		log.Println("redirecting to home.html")
 		// 		http.Redirect(w, r, "/home.html", 301)
 		// 	}
 		// }
 		s.FileHandler.ServeHTTP(w, r)
 	}
 
-	if isCSS(r.URL.Path) {
+	if isAsset(r.URL.Path) {
+		log.Println("is asset")
 		s.FileHandler.Handler.ServeHTTP(w, r)
 	}
 
 	switch r.URL.Path {
 	// redirect to / => /login.hml
 	case "/":
-		fmt.Println("redirecting to login.html")
+		log.Println("redirecting to login.html")
 		http.Redirect(w, r, "/login.html", 301)
 		return
 	// serve robots file
@@ -93,7 +94,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "/login":
 		_, err := s.UserService.Login(w, r)
 
-		fmt.Println(err)
+		log.Println(err)
 		if err == nil {
 			http.Redirect(w, r, "/home.html", 301)
 		}
@@ -102,7 +103,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	case "/register":
 		_, err := s.UserService.Register(w, r)
-		fmt.Println(err)
+		log.Println(err)
 		if err == nil {
 			http.Redirect(w, r, "/login.html", 301)
 		}

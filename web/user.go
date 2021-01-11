@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -34,7 +35,7 @@ func NewUserService(db *bolt.DB) (userService *UserService) {
 
 // Login allows a user to login to their account
 func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (user *User, err error) {
-	fmt.Println("method: ", r.Method)
+	log.Println("method: ", r.Method)
 
 	// TODO handle HEAD, PUT, and PATCH separately
 	if r.Method != "POST" {
@@ -43,8 +44,8 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (u
 	}
 
 	r.ParseForm()
-	fmt.Println("username: ", r.Form["username"])
-	fmt.Println("password: ", r.Form["password"])
+	log.Println("username: ", r.Form["username"])
+	log.Println("password: ", r.Form["password"])
 
 	// get username
 	user, err = userService.getUser(r.Form["username"][0])
@@ -74,11 +75,11 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 	}
 
 	r.ParseForm()
-	fmt.Println(r.Form)
+	log.Println(r.Form)
 
 	passwordHash, err := HashPassword(r.Form["password"][0])
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 
 	// create new user from request then save in db
@@ -116,7 +117,7 @@ func CreateUser(user *User, db *bolt.DB) error {
 
 		// Marshal user data into bytes.
 		buf, err := json.Marshal(user)
-		fmt.Println(buf)
+		log.Println(buf)
 		if err != nil {
 			return err
 		}
@@ -147,7 +148,7 @@ func CheckPasswordHash(password, hash string) bool {
 
 func (userService *UserService) getUser(username string) (user *User, err error) {
 	user = &User{}
-	fmt.Println("getting user for", username)
+	log.Println("getting user for", username)
 
 	err = userService.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("users"))

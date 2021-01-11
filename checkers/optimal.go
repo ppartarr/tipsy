@@ -1,7 +1,7 @@
 package checkers
 
 import (
-	"fmt"
+	"log"
 	"sort"
 
 	"github.com/ppartarr/tipsy/correctors"
@@ -37,9 +37,9 @@ func CheckOptimal(password string, frequencyBlacklist map[string]int) bool {
 	combinationToTry := combinationProbability{}
 	combinationToTry = findOptimalSubset(ballProbability, cutoff, frequencyBlacklist)
 
-	fmt.Println(combinationToTry)
+	log.Println(combinationToTry)
 	for _, password := range combinationToTry.passwords {
-		// fmt.Println(password)
+		// log.Println(password)
 		if registeredPassword == password {
 			return true
 		}
@@ -74,8 +74,8 @@ func findProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) floa
 // qth most probable password
 // returns the set with the highest utility
 func findOptimalSubset(ballProbability map[string]float64, cutoff float64, frequencyBlacklist map[string]int) combinationProbability {
-	fmt.Println("ball probability: ", ballProbability)
-	fmt.Println("cutoff: ", cutoff)
+	log.Println("ball probability: ", ballProbability)
+	log.Println("cutoff: ", cutoff)
 	passwordsInBall := make([]string, len(ballProbability))
 
 	for word := range ballProbability {
