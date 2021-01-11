@@ -4,11 +4,20 @@ import (
 	"bufio"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/ppartarr/tipsy/checkers"
+	"github.com/ppartarr/tipsy/web"
+	bolt "go.etcd.io/bbolt"
+)
+
+const (
+	version = "0.0.1"
+	domain  = "typo.partarrieu.me"
+	email   = "philippe@partarrieu.me"
 )
 
 func main() {
@@ -31,7 +40,39 @@ func main() {
 	// frequencyBlacklist := loadFrequencyBlackList("./data/blacklistTest.txt")
 	// fmt.Println(frequencyBlacklist)
 	checkers.CheckOptimal(submittedPassword, frequencyBlacklist)
-	server()
+
+	// setup & open bolt database
+	var (
+		boltDB    *bolt.DB
+		usersPath = "db/users.bolt"
+	)
+
+	boltDB, err := bolt.Open(usersPath, 0666, nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer boltDB.Close()
+
+	// TODO init session
+
+	// create the server instance
+	var server *web.Server
+
+	server = &web.Server{
+		FileHandler: &web.FileServer{
+			Handler: http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
+		},
+		UserService: web.NewUserService(boltDB),
+	}
+
+	// start listening to requests
+	log.Println("Listening on :8000...")
+	err = http.ListenAndServe(":8000", server)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func loadBlackList(filename string) []string {
