@@ -75,7 +75,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isAsset(r.URL.Path) {
-		log.Println("is asset")
 		s.FileHandler.Handler.ServeHTTP(w, r)
 	}
 

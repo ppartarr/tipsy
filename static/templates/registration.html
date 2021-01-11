@@ -4,9 +4,12 @@
     <div class="centered registration">
         <h1>Create an account</h1>
         <form action="/register" method="post">
-            <input id="username" type="text" placeholder="Username" name="username" required>
-            <input id="password" type="password" placeholder="Password" name="password" required>
+            <input id="username" type="text" placeholder="Username" name="username"  id="username" required>
+            <input id="password" type="password" placeholder="Password" name="password" id="password" required>
             <input id="password-copy" type="password" placeholder="Re-type your password" name="password-copy" required>
+            <div class="progress">
+                <div id="strength-progress-bar" class="progress-bar"></div>
+            </div>
 
             <button type="submit"><span>Submit</span></button>
         </form>
@@ -14,5 +17,21 @@
 </body>
 <footer>
     <script type="text/javascript" src="/static/scripts/zxcvbn.js"></script>
+    <script type="text/javascript" src="/static/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/scripts/strengthMeter.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // create user inputs
+            var userInputs = new Array();
+            // TODO put user email here
+            userInputs.push($("#username"));
+            // set the strength progress bar
+            $("#strength-progress-bar").zxcvbnProgressBar({
+                passwordInput: "#password",
+                userInputs: userInputs,
+                ratings: ["Bad", "Weak", "Medium", "Strong", "Very strong"]
+            });
+        });
+    </script>
 </footer>
 {{end}}
