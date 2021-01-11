@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/mcnijman/go-emailaddress"
 	"github.com/ppartarr/tipsy/web/session"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/crypto/bcrypt"
@@ -44,23 +45,29 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (u
 	}
 
 	r.ParseForm()
-	log.Println("username: ", r.Form["username"])
+	log.Println("email: ", r.Form["email"])
 	log.Println("password: ", r.Form["password"])
 
-	// get username
-	user, err = userService.getUser(r.Form["username"][0])
+	// get user from email
+	user, err = userService.getUser(r.Form["email"][0])
 
 	if err != nil {
-		return nil, fmt.Errorf("could not get user %q: %q", r.Form["username"][0], err)
+		return nil, fmt.Errorf("could not get user %q: %q", r.Form["email"][0], err)
+	}
+
+	// validate email
+	_, err = emailaddress.Parse(r.Form["email"][0])
+	if err != nil {
+		return nil, fmt.Errorf("invalid email: %q", r.Form["email"][0])
 	}
 
 	if !CheckPasswordHash(r.Form["password"][0], user.PasswordHash) {
-		return nil, fmt.Errorf("wrong password for user %q", r.Form["username"][0])
+		return nil, fmt.Errorf("wrong password for user %q", r.Form["email"][0])
 	}
 
 	_, err = session.SetUserID(w, r, strconv.Itoa(user.ID))
 	if err != nil {
-		return nil, fmt.Errorf("could not create a session for user %q: %q", r.Form["username"][0], err)
+		return nil, fmt.Errorf("could not create a session for user %q: %q", r.Form["email"][0], err)
 	}
 
 	return
@@ -84,7 +91,7 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 
 	// create new user from request then save in db
 	user = &User{
-		Username:     r.Form["username"][0],
+		Email:        r.Form["email"][0],
 		PasswordHash: passwordHash,
 	}
 	CreateUser(user, userService.db)
@@ -123,14 +130,14 @@ func CreateUser(user *User, db *bolt.DB) error {
 		}
 
 		// Persist bytes to users bucket.
-		return bucket.Put([]byte(user.Username), buf)
+		return bucket.Put([]byte(user.Email), buf)
 	})
 }
 
 // User represents a user
 type User struct {
 	ID           int    `json:"id" storm:"id,increment"`
-	Username     string `json:"username" storm:"unique"`
+	Email        string `json:"email" storm:"unique"`
 	PasswordHash string `json:"password"`
 }
 
@@ -146,9 +153,9 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func (userService *UserService) getUser(username string) (user *User, err error) {
+func (userService *UserService) getUser(email string) (user *User, err error) {
 	user = &User{}
-	log.Println("getting user for", username)
+	log.Println("getting user for", email)
 
 	err = userService.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("users"))
@@ -157,10 +164,10 @@ func (userService *UserService) getUser(username string) (user *User, err error)
 			return fmt.Errorf("bucket %q not found", "users")
 		}
 
-		userBytes := bucket.Get([]byte(username))
+		userBytes := bucket.Get([]byte(email))
 
 		if len(userBytes) == 0 {
-			return fmt.Errorf("no user with username %q in bucket %q", username, "users")
+			return fmt.Errorf("no user with email %q in bucket %q", email, "users")
 		}
 
 		err := json.Unmarshal(userBytes, &user)

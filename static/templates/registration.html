@@ -4,7 +4,7 @@
     <div class="centered registration">
         <h1>Create an account</h1>
         <form action="/register" method="post">
-            <input id="username" type="text" placeholder="Username" name="username"  id="username" required>
+            <input id="email" type="text" placeholder="Email" name="email"  id="email" required>
             <input id="password" type="password" placeholder="Password" name="password" id="password" required>
             <input id="password-copy" type="password" placeholder="Re-type your password" name="password-copy" required>
             <div class="progress">
@@ -24,7 +24,7 @@
             // create user inputs
             var userInputs = new Array();
             // TODO put user email here
-            userInputs.push($("#username"));
+            userInputs.push($("#email"));
             // set the strength progress bar
             $("#strength-progress-bar").zxcvbnProgressBar({
                 passwordInput: "#password",
