@@ -2,15 +2,19 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/blevesearch/bleve"
 	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/web"
+	"github.com/ppartarr/tipsy/web/session"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -18,6 +22,10 @@ const (
 	version = "0.0.1"
 	domain  = "typo.partarrieu.me"
 	email   = "philippe@partarrieu.me"
+)
+
+var (
+	sessionKey = os.Getenv("SESSION_KEY")
 )
 
 func main() {
@@ -43,6 +51,7 @@ func main() {
 
 	// setup & open bolt database
 	var (
+		sessionDB bleve.Index
 		boltDB    *bolt.DB
 		usersPath = "db/users.bolt"
 	)
@@ -56,6 +65,9 @@ func main() {
 	defer boltDB.Close()
 
 	// TODO init session
+	fmt.Println("initializing cookie store, cookies will expire after: ", time.Duration(60)*time.Second)
+	session.StorageDir = "./db"
+	session.InitStore(sessionKey, sessionDB, 60)
 
 	// create the server instance
 	var server *web.Server

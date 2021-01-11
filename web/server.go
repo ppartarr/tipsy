@@ -1,8 +1,11 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/ppartarr/tipsy/web/session"
 )
 
 var (
@@ -46,6 +49,28 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// http.HandleFunc("/register", s.UserService.Register)
 
 	if isHTML(r.URL.Path) {
+		fmt.Println(r.URL.Path)
+		// if request is for home.html, check if user has a session
+
+		// if request is for home page, check the user session
+		if strings.HasSuffix(r.URL.Path, "home.html") {
+			_, err := session.GetUserIDInt(w, r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		}
+
+		// if request is for login page & the user has a valid session, redirect to home page
+		// if strings.HasSuffix(r.URL.Path, "login.html") {
+		// 	userID, err := session.GetUserIDInt(w, r)
+
+		// 	if userID != -1 && err == nil {
+		// 		// redirect to home page
+		// 		fmt.Println("redirecting to home.html")
+		// 		http.Redirect(w, r, "/home.html", 301)
+		// 	}
+		// }
 		s.FileHandler.ServeHTTP(w, r)
 	}
 
@@ -56,6 +81,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	// redirect to / => /login.hml
 	case "/":
+		fmt.Println("redirecting to login.html")
 		http.Redirect(w, r, "/login.html", 301)
 		return
 	// serve robots file
@@ -65,10 +91,28 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	Disallow: /`))
 		return
 	case "/login":
-		s.UserService.Login(w, r)
+		_, err := s.UserService.Login(w, r)
+
+		fmt.Println(err)
+		if err == nil {
+			http.Redirect(w, r, "/home.html", 301)
+		}
+
+		// TODO if login successfull redirect to home
 		return
 	case "/register":
-		s.UserService.Register(w, r)
+		_, err := s.UserService.Register(w, r)
+		fmt.Println(err)
+		if err == nil {
+			http.Redirect(w, r, "/login.html", 301)
+		}
+		return
+	case "/logout":
+		s.UserService.Logout(w, r)
+		// _, err := s.UserService.Logout(w, r)
+		// if err == nil {
+		// 	http.Redirect(w, r, "/login.html", 301)
+		// }
 		return
 	// serve favicon
 	// case "/favicon.ico":
@@ -96,6 +140,15 @@ func isHTML(path string) bool {
 func isCSS(path string) bool {
 	if strings.HasSuffix(path, "css") {
 		return true
+	}
+	return false
+}
+
+func isAsset(path string) bool {
+	for _, e := range assetExtensions {
+		if strings.HasSuffix(path, e) {
+			return true
+		}
 	}
 	return false
 }
