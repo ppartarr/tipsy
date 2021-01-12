@@ -3,6 +3,7 @@ package web
 import (
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/ppartarr/tipsy/web/session"
@@ -41,14 +42,8 @@ type Server struct {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// init http handlers
-	// fs := http.FileServer(http.Dir("./static"))
-	// http.Handle("/static/", http.StripPrefix("/static/", fs))
-	// http.HandleFunc("/", s.FileHandler.serveHTTP)
-	// http.HandleFunc("/login", s.UserService.Login)
-	// http.HandleFunc("/register", s.UserService.Register)
 
-	if isHTML(r.URL.Path) {
+	if isHTML(r.URL) {
 		log.Println(r.URL.Path)
 		// if request is for home.html, check if user has a session
 
@@ -93,12 +88,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "/login":
 		_, err := s.UserService.Login(w, r)
 
-		log.Println(err)
+		// TODO if login successfull redirect to home else refresh login page
 		if err == nil {
 			http.Redirect(w, r, "/home.html", 301)
+		} else {
+			http.Redirect(w, r, "/login.html", 301)
 		}
 
-		// TODO if login successfull redirect to home
 		return
 	case "/register":
 		_, err := s.UserService.Register(w, r)
@@ -114,28 +110,23 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// 	http.Redirect(w, r, "/login.html", 301)
 		// }
 		return
-	case "/reset":
+	case "/recover":
+		s.UserService.PasswordRecovery(w, r)
+		return
+	case "/reset?":
 		s.UserService.PasswordReset(w, r)
 		return
-	// serve favicon
-	// case "/favicon.ico":
-	// 	c, err := ioutil.ReadFile("favicon.ico")
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 		return
-	// 	}
-
-	// 	w.WriteHeader(http.StatusOK)
-	// 	_, _ = w.Write(c)
-
-	// 	return
 	default:
 	}
 }
 
-func isHTML(path string) bool {
-	if strings.HasSuffix(path, "html") {
-		return true
+func isHTML(url *url.URL) bool {
+	slice := strings.Split(url.String(), "?")
+
+	if len(slice) > 0 {
+		if strings.HasSuffix(slice[0], "html") {
+			return true
+		}
 	}
 	return false
 }

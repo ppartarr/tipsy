@@ -61,7 +61,7 @@ func main() {
 		usersDBPath = "db/users.bolt"
 	)
 
-	boltDB, err := bolt.Open(usersDBPath, 0666, nil)
+	boltDB, err = bolt.Open(usersDBPath, 0666, nil)
 
 	if err != nil {
 		log.Fatal(err)

@@ -1,13 +1,39 @@
-{{define "title"}}Login{{end}}
+{{define "title"}}Password Reset{{end}}
 {{define "body"}}
 <body>
     <div class="centered reset">
         <h1>Password Reset</h1>
-        <form action="/reset" method="post">
-            <input id="email" type="text" placeholder="Email" name="email" required>
-            <button type="submit"><span>Login</span></button>
+        <form action="/reset?token=" method="post" id="reset-form">
+            <input id="email" type="text" placeholder="Email" name="email"  id="email" required>
+            <input id="password" type="password" placeholder="Password" name="password" id="password" required>
+            <input id="password-copy" type="password" placeholder="Re-type your password" name="password-copy" required>
+            <div class="progress">
+                <div id="strength-progress-bar" class="progress-bar"></div>
+            </div>
+
+            <button type="submit"><span>Submit</span></button>
         </form>
-        <p class="hidden">An email has been sent to your address. Please click the link to reset your password</p>
     </div>
 </body>
+<footer>
+    <script type="text/javascript" src="/static/scripts/zxcvbn.js"></script>
+    <script type="text/javascript" src="/static/scripts/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/scripts/strengthMeter.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // set the strength progress bar
+            $("#strength-progress-bar").zxcvbnProgressBar({
+                passwordInput: "#password",
+                ratings: ["Bad", "Weak", "Medium", "Strong", "Very strong"]
+            });
+        });
+
+        // get reset token from url
+        var url = window.location;
+        var access_token = new URLSearchParams(url.hash).get("token");
+
+        // update form action to append token
+        document.getElementById("reset-form").action = document.getElementById("reset-form").action + access_token;
+    </script>
+</footer>
 {{end}}
