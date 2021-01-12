@@ -22,4 +22,5 @@ require (
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 	gonum.org/v1/gonum v0.8.2
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+	gopkg.in/yaml.v2 v2.2.2
 )

@@ -1,0 +1,71 @@
+# given a password p and set of corrector functions C = {}, the ball is the set of passwords we obtain after applying the corrector functions to the p
+#
+#  Submitted  => corrector    => the ball of password p
+#  password p    functions
+#
+#  password   => swc-all      => PASSWORD
+#             => swc-first    => Password
+#             => rm-last      => passwor
+#
+
+# one of always, blacklist, approximateOptimal
+checker: 
+  # always verify the submitted password and all passwords in the ball
+  # always: false
+  # use a blacklist of high-probability passwords. It checks the password or any password in the ball only if it isn't in the blacklist
+  # blacklist:
+  #   file:
+  # use a distribution of high-probability passwords (blacklist) and a distribution of typos to decide whether to correct the typo or not
+  optimal:
+    file:
+    typos:
+      # defaut values taken from Chatterjee et al. study on password typo rate
+      # total of 96963 password entry attempts
+      # you can change the distribution by setting the individual typo frequencies below
+        same: 90234
+        other: 1918
+        swc-all: 1698
+        kclose: 1385
+        keypress-edit: 1000
+        rm-last: 382
+        swc-first: 209
+        rm-firstc: 55
+        sws-last1: 19
+        tcerror: 18
+        sws-lastn: 14
+        upncap: 13
+        n2s-last: 9
+        cap2up: 5
+        add1-last: 5
+    # find the optimal set of passwords in the ball such that aggregate probability of each password in the ball
+    # is lower than the probability of the qth most probable password in the blacklist
+    # try q = 10
+    qthMostProbablePassword: 10
+
+# number of login attempts a user can make until they have to unlock the account with email 2FA
+rate-limit: 
+
+correctors: 
+# choose from the list below
+  - same
+  - swc-all
+  - kclose
+  - keypress-edit
+  - rm-last
+  - swc-first
+  - sws-last1
+  - tcerror
+  - sws-lastn
+  - upncap
+  - n2s-last
+  - cap2up
+  - add1-last
+
+# configure SMTP notifications
+smtp:
+  server: smtp.gmail.com
+  username: gotipsymail@gmail.com
+  # password: komrfmzkujebipru
+  password: "mlbmjxefxeijxihw"
+  port: 587
+  from: gotipsymail@gmail.com
