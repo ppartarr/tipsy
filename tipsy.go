@@ -12,6 +12,7 @@ import (
 
 	"github.com/blevesearch/bleve"
 	"github.com/ppartarr/tipsy/checkers"
+	"github.com/ppartarr/tipsy/config"
 	"github.com/ppartarr/tipsy/mail"
 	"github.com/ppartarr/tipsy/web"
 	"github.com/ppartarr/tipsy/web/session"
@@ -32,11 +33,15 @@ func main() {
 	// get args from cli
 	args := os.Args[1:]
 	submittedPassword := args[0]
-	// log.Println(args[0])
+	configFile := "tipsy.yml"
 
-	// numberOfCorrectors := 3go
-	// checker := "always"
-	// password := args[0]
+	// load server config
+	serverConfig, err := config.LoadServer(configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println(serverConfig.Checker.Always)
 
 	// load black list
 	// blackList := loadBlackList("./data/blacklistRockYou1000.txt")
@@ -64,7 +69,22 @@ func main() {
 
 	defer boltDB.Close()
 
-	// TODO init session
+	// init mailer
+	if stat, err := os.Stat(configFile); err == nil && !stat.IsDir() {
+		if serverConfig.SMTP != nil {
+			mail.InitMailer(
+				serverConfig.SMTP.Server,
+				serverConfig.SMTP.Username,
+				serverConfig.SMTP.Password,
+				serverConfig.SMTP.From,
+				serverConfig.SMTP.Port,
+			)
+		}
+	} else {
+		log.Fatal("specified configuration file " + configFile + " does not exist or is a directory")
+	}
+
+	// init session
 	log.Println("initializing cookie store, cookies will expire after: ", time.Duration(60)*time.Second)
 	session.StorageDir = "./db"
 	session.InitStore(sessionKey, sessionDB, 60)

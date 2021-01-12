@@ -1,7 +1,6 @@
 package mail
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -56,22 +55,15 @@ func ConfigureLogger(level logrus.Level, prod bool) {
 }
 
 // InitMailer returns a new mailer instance
-func InitMailer(smtpServer, smtpUser, smtpPassword, from string, smtpPort int, to []string) {
+func InitMailer(smtpServer, smtpUser, smtpPassword, from string, smtpPort int) {
 	m = &Mailer{
 		server:   smtpServer,
 		port:     smtpPort,
 		user:     smtpUser,
 		password: smtpPassword,
 		from:     from,
-		to:       to,
 	}
 	m.dialer = gomail.NewDialer(m.server, m.port, m.user, m.password)
-}
-
-func SendMails(subject string, mail hermes.Email) {
-	for _, recipient := range m.to {
-		Send(recipient, subject, mail)
-	}
 }
 
 // Send handles dispatching an email to the specified receiver
@@ -172,8 +164,6 @@ func GenerateErrorMail(errs []error, msg string, service string) hermes.Email {
 
 	return hermes.Email{
 		Body: hermes.Body{
-			// msg.Attach(filename string, settings ...gomail.FileSetting)
-			// msg.SetBody("text/plain", plainText)
 			Greeting:  "Dear",
 			Name:      "Admin",
 			Signature: "kind regards",
@@ -196,20 +186,15 @@ func GenerateResolvedNotificationMail(service string) hermes.Email {
 	}
 }
 
-func GeneratePasswordResetMail(token string, url string) hermes.Email {
-	fmt.Println(m.server)
-
+func GeneratePasswordResetMail(url string) hermes.Email {
 	return hermes.Email{
 		Body: hermes.Body{
 			Greeting:  "Dear",
 			Name:      "Admin",
 			Signature: "Kindly",
 			Intros: []string{
-				"Please reset your password by clicking on the following link: ",
-				m.server + token,
-				// TODO construct email link http://url/$token
-				// "An error with the service " + strings.ToUpper(service) + " occurred:",
-				// "Timestamp: " + time.Now().Format(timestampFormat),
+				"Please reset your password by visiting this link in a web browser: ",
+				url,
 			},
 		},
 	}
