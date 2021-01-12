@@ -35,8 +35,12 @@ body {
     width: 30rem;
 }
 
-.registration {
+.registration, .reset {
     width: 40rem;
+}
+
+.hidden {
+  visibility: hidden;
 }
 
 form {

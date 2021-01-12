@@ -1,6 +1,6 @@
 package checkers
 
-// CheckBlacklist uses a blacklist of high-probability passwords. It checks the password or any password in the ball
+// CheckBlacklist uses a blacklist of high-probability passwords. It checks the password or any password in the ball only if it isn't in the blacklist
 func CheckBlacklist(password string, blacklist []string) bool {
 	// TODO get the password from db
 	registeredPassword := "password"

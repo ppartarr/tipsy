@@ -1,0 +1,13 @@
+{{define "title"}}Login{{end}}
+{{define "body"}}
+<body>
+    <div class="centered reset">
+        <h1>Password Reset</h1>
+        <form action="/reset" method="post">
+            <input id="email" type="text" placeholder="Email" name="email" required>
+            <button type="submit"><span>Login</span></button>
+        </form>
+        <p class="hidden">An email has been sent to your address. Please click the link to reset your password</p>
+    </div>
+</body>
+{{end}}

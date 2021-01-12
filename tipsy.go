@@ -12,6 +12,7 @@ import (
 
 	"github.com/blevesearch/bleve"
 	"github.com/ppartarr/tipsy/checkers"
+	"github.com/ppartarr/tipsy/mail"
 	"github.com/ppartarr/tipsy/web"
 	"github.com/ppartarr/tipsy/web/session"
 	bolt "go.etcd.io/bbolt"
@@ -50,12 +51,12 @@ func main() {
 
 	// setup & open bolt database
 	var (
-		sessionDB bleve.Index
-		boltDB    *bolt.DB
-		usersPath = "db/users.bolt"
+		sessionDB   bleve.Index
+		boltDB      *bolt.DB
+		usersDBPath = "db/users.bolt"
 	)
 
-	boltDB, err := bolt.Open(usersPath, 0666, nil)
+	boltDB, err := bolt.Open(usersDBPath, 0666, nil)
 
 	if err != nil {
 		log.Fatal(err)

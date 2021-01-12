@@ -114,6 +114,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// 	http.Redirect(w, r, "/login.html", 301)
 		// }
 		return
+	case "/reset":
+		s.UserService.PasswordReset(w, r)
+		return
 	// serve favicon
 	// case "/favicon.ico":
 	// 	c, err := ioutil.ReadFile("favicon.ico")
