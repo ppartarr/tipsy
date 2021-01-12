@@ -46,12 +46,12 @@ func NewUserService(db *bolt.DB) (userService *UserService) {
 		// create users bucket
 		_, err := tx.CreateBucketIfNotExists([]byte("users"))
 		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
+			return errors.New("create bucket: " + err.Error())
 		}
 		// create tokens bucket for password reset
-		_, err := tx.CreateBucketIfNotExists([]byte("token"))
+		_, err = tx.CreateBucketIfNotExists([]byte("tokens"))
 		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
+			return errors.New("create bucket: " + err.Error())
 		}
 		return nil
 	})
@@ -79,15 +79,16 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (u
 	user, err = userService.getUser(r.Form["email"][0])
 
 	if err != nil {
-		return nil, fmt.Errorf("could not get user %q: %q", r.Form["email"][0], err)
+		return nil, errors.New("could not get user " + r.Form["email"][0] + ": " + err.Error())
 	}
 
 	// validate email
 	_, err = emailaddress.Parse(r.Form["email"][0])
 	if err != nil {
-		return nil, fmt.Errorf("invalid email: %q", r.Form["email"][0])
+		return nil, errors.New("invalid email: %q" + r.Form["email"][0] + ": " + err.Error())
 	}
 
+	// TODO plug-in checkers here
 	// check password
 	if !CheckPasswordHash(r.Form["password"][0], user.PasswordHash) {
 
@@ -95,17 +96,19 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (u
 		if user.LoginAttempts < 10 {
 			userService.incrementLoginAttempts(user)
 		} else {
-			userService.PasswordReset(w, r)
-			return nil, fmt.Errorf("the limit of login attempts has been reached, please reset your password via the mail provided in the link %q", r.Form["email"][0])
+			go func() {
+				userService.PasswordRecovery(w, r)
+			}()
+			return nil, errors.New("the limit of login attempts has been reached, please reset your password via the mail provided in the link " + r.Form["email"][0])
 		}
 
-		return nil, fmt.Errorf("wrong password for user %q", r.Form["email"][0])
+		return nil, errors.New("wrong password for user " + r.Form["email"][0])
 	}
 
 	// init session
 	_, err = session.SetUserID(w, r, strconv.Itoa(user.ID))
 	if err != nil {
-		return nil, fmt.Errorf("could not create a session for user %q: %q", r.Form["email"][0], err)
+		return nil, errors.New("could not create a session for user " + r.Form["email"][0] + ": " + err.Error())
 	}
 
 	return
@@ -147,38 +150,130 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 func (userService *UserService) Logout(w http.ResponseWriter, r *http.Request) (user *User, err error) {
 	err = session.Destroy(w, r)
 	if err != nil {
-		return nil, fmt.Errorf("could not destroy session")
+		return nil, errors.New("could not destroy session")
 	}
 
 	return
 }
 
-func (userService *UserService) PasswordReset(w http.ResponseWriter, r *http.Request) (token *Token, err error) {
+// PasswordRecovery sends the user an email containing a password reset link
+func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.Request) (token *Token, err error) {
 	// get user from email
+	r.ParseForm()
 	user, err := userService.getUser(r.Form["email"][0])
 
 	if err != nil {
-		return nil, fmt.Errorf("could not get user %q: %q", r.Form["email"][0], err)
+		return nil, errors.New("could not get user" + r.Form["email"][0] + ": " + err.Error())
 	}
 
 	token = &Token{
-		Email: r.Form["email"][0],
-		TTL:   5 * time.Minute,
+		Email:     r.Form["email"][0],
+		TTL:       5 * time.Minute,
+		CreatedAt: time.Now().Local(),
 	}
 
 	// generate token
 	token.Token = generateToken(user.Email)
 
 	// store the token
+	log.Println(token)
 	err = userService.storeToken(token)
 	if err != nil {
-		return nil, fmt.Errorf("could not store token for user %q: %q", r.Form["email"][0], err)
+		return nil, errors.New("could not store token for user " + r.Form["email"][0] + ": " + err.Error())
 	}
 
 	// send password reset mail
 	go func() {
-		mail.Send(user.Email, "Tipsy password reset", mail.GeneratePasswordResetMail(token, url))
+		// i hope this is safe
+		url := "http://localhost:8000/reset.html?token=" + token.Token
+		mail.Send(user.Email, "Tipsy password reset", mail.GeneratePasswordResetMail(url))
 	}()
+
+	return token, nil
+}
+
+// PasswordReset validates the token then updates the user's password
+func (userService *UserService) PasswordReset(w http.ResponseWriter, r *http.Request) error {
+
+	r.ParseForm()
+	log.Println(r.Form)
+
+	// check that password & password copy match
+	if r.Form["password"][0] != r.Form["password-copy"][0] {
+		return errors.New("password and password copy don't match")
+	}
+
+	// TODO validate token from url
+	tokenHash := strings.TrimPrefix(r.URL.Path, "/reset?token=")
+
+	// TODO check that TTL is not expired
+	token, err := userService.getToken(tokenHash)
+	if err != nil {
+		return errors.New("could not get token")
+	}
+
+	log.Println(token)
+
+	if token.CreatedAt.Add(token.TTL).Before(time.Now().Local()) {
+		// do something here
+		return errors.New("the token has expired")
+	}
+
+	// TODO invalidate token & replace old password hash with new password hash
+	err = userService.deleteToken(token)
+	if err != nil {
+		return errors.New("error deleting the token" + err.Error())
+	}
+
+	// TODO improve this updatePassword -> updateUser
+	err = userService.updatePassword(token.Email, r.Form["password"][0])
+
+	return nil
+}
+
+func (userService *UserService) updatePassword(email string, password string) error {
+	// get user from db
+	user, err := userService.getUser(email)
+	if err != nil {
+		return errors.New("error getting the user: " + err.Error())
+	}
+
+	// hash the input password
+	passwordHash, err := HashPassword(password)
+	if err != nil {
+		return errors.New("failed to hash the input password: " + err.Error())
+	}
+
+	// set new password & set login attempts to 0
+	user.PasswordHash = passwordHash
+	user.LoginAttempts = 0
+
+	err = userService.updateUser(user)
+	if err != nil {
+		return errors.New("failed to update the user's password: " + err.Error())
+	}
+
+	return nil
+}
+
+func (userService *UserService) updateUser(user *User) error {
+	user = &User{}
+	log.Println("updating user for", user.Email)
+
+	return userService.db.Update(func(tx *bolt.Tx) error {
+		// Retrieve the users bucket
+		// This should be created when the DB is first opened.
+		bucket := tx.Bucket([]byte("users"))
+
+		// Marshal user data into bytes
+		buf, err := json.Marshal(user)
+		if err != nil {
+			return err
+		}
+
+		// Persist bytes to users bucket
+		return bucket.Put([]byte(user.Email), buf)
+	})
 }
 
 // hash email using bcrypt then hash again with md5 so that hash can be used as token in a url
@@ -197,8 +292,9 @@ func generateToken(email string) string {
 }
 
 func (userService *UserService) storeToken(token *Token) error {
+	log.Println("storing token")
 	return userService.db.Update(func(tx *bolt.Tx) error {
-		// Retrieve the users bucket
+		// Retrieve the tokens bucket
 		// This should be created when the DB is first opened.
 		bucket := tx.Bucket([]byte("tokens"))
 
@@ -215,25 +311,37 @@ func (userService *UserService) storeToken(token *Token) error {
 		}
 
 		// Persist bytes to users bucket
-		return bucket.Put([]byte(token.Email), buf)
+		return bucket.Put([]byte(token.Token), buf)
 	})
 }
 
-func (userService *UserService) getToken(email string) (token *Token, err error) {
+func (userService *UserService) deleteToken(token *Token) error {
+	log.Println("deleting token")
+	return userService.db.Update(func(tx *bolt.Tx) error {
+		// Retrieve the tokens bucket
+		// This should be created when the DB is first opened.
+		bucket := tx.Bucket([]byte("tokens"))
+
+		// delete token from bucket
+		return bucket.Delete([]byte(token.Token))
+	})
+}
+
+func (userService *UserService) getToken(tokenHash string) (token *Token, err error) {
 	token = &Token{}
-	log.Println("getting token for", email)
+	log.Println("getting token for", tokenHash)
 
 	err = userService.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("tokens"))
 
 		if bucket == nil {
-			return fmt.Errorf("bucket %q not found", "users")
+			return errors.New("bucket tokens not found")
 		}
 
-		tokenBytes := bucket.Get([]byte(email))
+		tokenBytes := bucket.Get([]byte(tokenHash))
 
 		if len(tokenBytes) == 0 {
-			return fmt.Errorf("no token for user with email %q in bucket %q", email, "users")
+			return errors.New("no token for token hash " + tokenHash + " in bucket tokens")
 		}
 
 		err := json.Unmarshal(tokenBytes, &token)
@@ -283,13 +391,13 @@ func (userService *UserService) getUser(email string) (user *User, err error) {
 		bucket := tx.Bucket([]byte("users"))
 
 		if bucket == nil {
-			return fmt.Errorf("bucket %q not found", "users")
+			return errors.New("bucket users not found")
 		}
 
 		userBytes := bucket.Get([]byte(email))
 
 		if len(userBytes) == 0 {
-			return fmt.Errorf("no user with email %q in bucket %q", email, "users")
+			return errors.New("no user with email " + email + " in bucket users")
 		}
 
 		err := json.Unmarshal(userBytes, &user)
@@ -322,6 +430,7 @@ func CheckPasswordHash(password, hash string) bool {
 
 func (userService *UserService) incrementLoginAttempts(user *User) error {
 	user.LoginAttempts++
+	log.Println(user.LoginAttempts)
 
 	return userService.db.Update(func(tx *bolt.Tx) error {
 		// Retrieve the users bucket
@@ -329,7 +438,7 @@ func (userService *UserService) incrementLoginAttempts(user *User) error {
 		bucket := tx.Bucket([]byte("users"))
 
 		if bucket == nil {
-			return fmt.Errorf("bucket %q not found", "users")
+			return errors.New("bucket users not found")
 		}
 
 		// Marshal user data into bytes
