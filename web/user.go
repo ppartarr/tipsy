@@ -65,72 +65,91 @@ func NewUserService(db *bolt.DB, tipsyConfig *config.Server) (userService *UserS
 }
 
 // Login allows a user to login to their account
-func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (user *User, err error) {
-	log.Println("method: ", r.Method)
-
+func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) error {
 	// TODO handle HEAD, PUT, and PATCH separately
 	if r.Method != "POST" {
 		http.Redirect(w, r, "/login.html", 301)
-		return
+		return errors.New("must use POST http method")
 	}
 
+	// check that a valid form was submitted
 	r.ParseForm()
-	log.Println("email: ", r.Form["email"])
-	log.Println("password: ", r.Form["password"])
+	log.Println(r.Form)
+	expectedValues := []string{"email", "password"}
+	if !formIsValid(r.Form, expectedValues) {
+		return errors.New("you must submit a valid form")
+	}
 
 	// get user from email
-	user, err = userService.getUser(r.Form["email"][0])
-
+	user, err := userService.getUser(r.Form["email"][0])
 	if err != nil {
-		return nil, errors.New("could not get user " + r.Form["email"][0] + ": " + err.Error())
+		return errors.New("could not get user " + r.Form["email"][0] + ": " + err.Error())
 	}
 
 	// validate email
+	log.Println("validating email address")
 	_, err = emailaddress.Parse(r.Form["email"][0])
 	if err != nil {
-		return nil, errors.New("invalid email: %q" + r.Form["email"][0] + ": " + err.Error())
+		return errors.New("invalid email: %q" + r.Form["email"][0] + ": " + err.Error())
 	}
 
 	// TODO plug-in checkers here
 	// check password
+	log.Println("checking password")
 	if !CheckPasswordHash(r.Form["password"][0], user.PasswordHash) {
 
 		// increment login attempts
-		if user.LoginAttempts < 10 {
+		if user.LoginAttempts < userService.config.RateLimit {
 			userService.incrementLoginAttempts(user)
 		} else {
+			log.Println("user has attempted to login too many times")
 			go func() {
 				userService.PasswordRecovery(w, r)
 			}()
-			return nil, errors.New("the limit of login attempts has been reached, please reset your password via the mail provided in the link " + r.Form["email"][0])
+			log.Println("this should return...")
+			return errors.New("the limit of login attempts has been reached, please reset your password via the mail provided in the link " + r.Form["email"][0])
 		}
 
-		return nil, errors.New("wrong password for user " + r.Form["email"][0])
+		return errors.New("wrong password for user " + r.Form["email"][0])
 	}
 
 	// init session
 	_, err = session.SetUserID(w, r, strconv.Itoa(user.ID))
 	if err != nil {
-		return nil, errors.New("could not create a session for user " + r.Form["email"][0] + ": " + err.Error())
+		return errors.New("could not create a session for user " + r.Form["email"][0] + ": " + err.Error())
 	}
 
-	return
+	return nil
 }
 
 // Register allows a user to register a new account
-func (userService *UserService) Register(w http.ResponseWriter, r *http.Request) (user *User, err error) {
+func (userService *UserService) Register(w http.ResponseWriter, r *http.Request) error {
 	// TODO handle HEAD, PUT, and PATCH separately
 	if r.Method != "POST" {
 		http.Redirect(w, r, "/login.html", 301)
-		return
+		return errors.New("must use POST http method")
+	}
+
+	// check that a valid form was submitted
+	r.ParseForm()
+	log.Println(r.Form)
+	expectedValues := []string{"email", "password", "password-copy"}
+	if !formIsValid(r.Form, expectedValues) {
+		return errors.New("you must submit a valid form")
+	}
+
+	// check that password & password copy match
+	if r.Form["password"][0] != r.Form["password-copy"][0] {
+		return errors.New("password and password copy don't match")
+	}
+
+	// check that email isn't already registered
+	user, err := userService.getUser(r.Form["email"][0])
+	if user != nil {
+		return errors.New("user already with email " + r.Form["email"][0] + " is already registered")
 	}
 
 	// TODO only register password if it is 3/4 in zxcbn-go
-
-	// TODO check that the email isn't already registered
-
-	r.ParseForm()
-	log.Println(r.Form)
 
 	passwordHash, err := HashPassword(r.Form["password"][0])
 	if err != nil {
@@ -146,32 +165,43 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 
 	userService.createUser(user)
 
-	return user, nil
+	return nil
 }
 
 // Logout logs a user out
-func (userService *UserService) Logout(w http.ResponseWriter, r *http.Request) (user *User, err error) {
-	err = session.Destroy(w, r)
+func (userService *UserService) Logout(w http.ResponseWriter, r *http.Request) error {
+	err := session.Destroy(w, r)
 	if err != nil {
-		return nil, errors.New("could not destroy session")
+		return errors.New("could not destroy session")
 	}
 
-	return
+	return nil
 }
 
 // PasswordRecovery sends the user an email containing a password reset link
-func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.Request) (token *Token, err error) {
-	// get user from email
+func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.Request) error {
+	// check that a valid form was submitted
 	r.ParseForm()
-	user, err := userService.getUser(r.Form["email"][0])
-
-	if err != nil {
-		return nil, errors.New("could not get user" + r.Form["email"][0] + ": " + err.Error())
+	log.Println(r.Form)
+	expectedValues := []string{"email"}
+	if !formIsValid(r.Form, expectedValues) {
+		return errors.New("you must submit a valid form")
 	}
 
-	token = &Token{
+	// get user from db using submitted email
+	user, err := userService.getUser(r.Form["email"][0])
+	if err != nil {
+		return errors.New("could not get user" + r.Form["email"][0] + ": " + err.Error())
+	}
+
+	log.Println("there")
+
+	log.Println(userService.config.TokenValidity)
+	log.Println(userService.config.TokenValidity * time.Minute)
+
+	token := &Token{
 		Email:     r.Form["email"][0],
-		TTL:       5 * time.Minute,
+		TTL:       userService.config.TokenValidity,
 		CreatedAt: time.Now().Local(),
 	}
 
@@ -182,34 +212,48 @@ func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.
 	log.Println(token)
 	err = userService.storeToken(token)
 	if err != nil {
-		return nil, errors.New("could not store token for user " + r.Form["email"][0] + ": " + err.Error())
+		return errors.New("could not store token for user " + r.Form["email"][0] + ": " + err.Error())
 	}
 
 	// send password reset mail
 	go func() {
+		log.Println("sending password reset email")
 		// i hope this is safe
 		url := "http://localhost:8000/reset.html?token=" + token.Token
 		mail.Send(user.Email, "Tipsy password reset", mail.GeneratePasswordResetMail(url))
 	}()
 
-	return token, nil
+	return nil
+}
+
+func formIsValid(form url.Values, expectedValues []string) bool {
+	for _, value := range expectedValues {
+		if len(form) == 0 || len(form[value]) == 0 {
+			return false
+		}
+	}
+
+	return true
 }
 
 // PasswordReset validates the token then updates the user's password
 func (userService *UserService) PasswordReset(w http.ResponseWriter, r *http.Request) error {
 
+	// check that a valid form was submitted
 	r.ParseForm()
 	log.Println(r.Form)
+	expectedValues := []string{"email", "password", "password-copy"}
+	if !formIsValid(r.Form, expectedValues) {
+		return errors.New("you must submit a valid form")
+	}
 
 	// check that password & password copy match
 	if r.Form["password"][0] != r.Form["password-copy"][0] {
 		return errors.New("password and password copy don't match")
 	}
 
-	// TODO validate token from url
-	tokenHash := strings.TrimPrefix(r.URL.Path, "/reset?token=")
-
-	// TODO check that TTL is not expired
+	// get token hash from form & get associated token from bucket
+	tokenHash := r.Form["token"][0]
 	token, err := userService.getToken(tokenHash)
 	if err != nil {
 		return errors.New("could not get token")
@@ -217,9 +261,19 @@ func (userService *UserService) PasswordReset(w http.ResponseWriter, r *http.Req
 
 	log.Println(token)
 
+	// check that the token matches the submitted user
+	if r.Form["email"][0] != token.Email {
+		return errors.New("submitted email & token email don't match")
+	}
+
+	// check if the TTL is still valid
+	log.Println(token.TTL)
+	log.Println(token.TTL * time.Minute)
+	log.Println(token.CreatedAt.Add(token.TTL))
+	log.Println(time.Now().Local())
+	log.Println(token.CreatedAt.Add(token.TTL).Before(time.Now().Local()))
 	if token.CreatedAt.Add(token.TTL).Before(time.Now().Local()) {
-		// do something here
-		return errors.New("the token has expired")
+		return errors.New("the token expired at " + token.CreatedAt.Add(token.TTL).String())
 	}
 
 	// TODO invalidate token & replace old password hash with new password hash
@@ -230,6 +284,8 @@ func (userService *UserService) PasswordReset(w http.ResponseWriter, r *http.Req
 
 	// TODO improve this updatePassword -> updateUser
 	err = userService.updatePassword(token.Email, r.Form["password"][0])
+
+	log.Println("password has been reset")
 
 	return nil
 }
@@ -260,7 +316,6 @@ func (userService *UserService) updatePassword(email string, password string) er
 }
 
 func (userService *UserService) updateUser(user *User) error {
-	user = &User{}
 	log.Println("updating user for", user.Email)
 
 	return userService.db.Update(func(tx *bolt.Tx) error {
@@ -285,8 +340,6 @@ func generateToken(email string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println("Hash to store:", string(hash))
 
 	// TODO store hash
 	hasher := md5.New()
@@ -343,7 +396,7 @@ func (userService *UserService) getToken(tokenHash string) (token *Token, err er
 
 		tokenBytes := bucket.Get([]byte(tokenHash))
 
-		if len(tokenBytes) == 0 {
+		if tokenBytes == nil || len(tokenBytes) == 0 {
 			return errors.New("no token for token hash " + tokenHash + " in bucket tokens")
 		}
 
@@ -399,7 +452,7 @@ func (userService *UserService) getUser(email string) (user *User, err error) {
 
 		userBytes := bucket.Get([]byte(email))
 
-		if len(userBytes) == 0 {
+		if userBytes == nil || len(userBytes) == 0 {
 			return errors.New("no user with email " + email + " in bucket users")
 		}
 
