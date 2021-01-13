@@ -16,6 +16,7 @@ import (
 	"github.com/ppartarr/tipsy/mail"
 	"github.com/ppartarr/tipsy/web"
 	"github.com/ppartarr/tipsy/web/session"
+	"github.com/ppartarr/tipsy/web/users"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -95,7 +96,7 @@ func main() {
 		FileHandler: &web.FileServer{
 			Handler: http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
 		},
-		UserService: web.NewUserService(boltDB, tipsyConfig),
+		UserService: users.NewUserService(boltDB, tipsyConfig),
 	}
 
 	// start listening to requests

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/ppartarr/tipsy/web/session"
+	"github.com/ppartarr/tipsy/web/users"
 )
 
 var (
@@ -38,7 +39,7 @@ var (
 // Server handles HTTP traffic from client
 type Server struct {
 	FileHandler *FileServer
-	UserService *UserService
+	UserService *users.UserService
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -80,6 +81,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.FileHandler.Handler.ServeHTTP(w, r)
 		return
 	}
+
+	log.Println(r.URL.Path)
 
 	switch r.URL.Path {
 	// redirect to / => /login.hml
