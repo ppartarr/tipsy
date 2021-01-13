@@ -7,11 +7,12 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/mcnijman/go-emailaddress"
+	"github.com/ppartarr/tipsy/config"
 	"github.com/ppartarr/tipsy/mail"
 	"github.com/ppartarr/tipsy/web/session"
 	bolt "go.etcd.io/bbolt"
@@ -20,7 +21,8 @@ import (
 
 // Service
 type UserService struct {
-	db *bolt.DB
+	db     *bolt.DB
+	config *config.Server
 }
 
 // User represents a user
@@ -41,7 +43,7 @@ type Token struct {
 }
 
 // NewService returns a new Service instance
-func NewUserService(db *bolt.DB) (userService *UserService) {
+func NewUserService(db *bolt.DB, tipsyConfig *config.Server) (userService *UserService) {
 	db.Update(func(tx *bolt.Tx) error {
 		// create users bucket
 		_, err := tx.CreateBucketIfNotExists([]byte("users"))
@@ -57,7 +59,8 @@ func NewUserService(db *bolt.DB) (userService *UserService) {
 	})
 
 	return &UserService{
-		db: db,
+		db:     db,
+		config: tipsyConfig,
 	}
 }
 

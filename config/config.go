@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"io/ioutil"
+	"log"
+	"time"
 
 	"gopkg.in/yaml.v2"
 )
@@ -23,8 +25,9 @@ type Server struct {
 		Optimal   *OptimalChecker   `yaml:"optimal"`
 	} `yaml:"checker"`
 
-	Correctors []string `yaml:"correctors"`
-	RateLimit  int      `yaml:"rate-limit"`
+	Correctors    []string      `yaml:"correctors"`
+	RateLimit     int           `yaml:"rateLimit"`
+	TokenValidity time.Duration `yaml:"tokenValidity"`
 }
 
 // BlacklistChecker represents blacklist checker
@@ -101,7 +104,18 @@ func (s *Server) IsValid() error {
 		return err
 	}
 
-	// TODO add validation
+	// check that token validity is set if not set to 15 min
+	if s.TokenValidity == 0*time.Second {
+		log.Println("token validity is not set, using default value of 15 min")
+		s.TokenValidity = 15 * time.Minute
+	}
+
+	// check that rate-limiting is set if not set to 10
+	log.Println(s.RateLimit)
+	if s.RateLimit == 0 {
+		log.Println("rate limiting is not set, using default of 10")
+		s.RateLimit = 10
+	}
 
 	return nil
 }

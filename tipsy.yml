@@ -42,9 +42,6 @@ checker:
     # try q = 10
     qthMostProbablePassword: 10
 
-# number of login attempts a user can make until they have to unlock the account with email 2FA
-rate-limit: 
-
 correctors: 
 # choose from the list below
   - same
@@ -60,6 +57,12 @@ correctors:
   - n2s-last
   - cap2up
   - add1-last
+
+# number of login attempts a user can make until they have to unlock the account via email link
+rateLimit: 10
+
+# reset link token validity duration in minutes
+tokenValidity: 15m
 
 # configure SMTP notifications
 smtp:

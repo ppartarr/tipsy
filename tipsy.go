@@ -36,12 +36,12 @@ func main() {
 	configFile := "tipsy.yml"
 
 	// load server config
-	serverConfig, err := config.LoadServer(configFile)
+	tipsyConfig, err := config.LoadServer(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println(serverConfig.Checker.Always)
+	log.Println(tipsyConfig.Checker.Always)
 
 	// load black list
 	// blackList := loadBlackList("./data/blacklistRockYou1000.txt")
@@ -51,7 +51,6 @@ func main() {
 	// load frequency black list
 	frequencyBlacklist := loadFrequencyBlackList("./data/rockyou-withcount1000.txt")
 	// frequencyBlacklist := loadFrequencyBlackList("./data/blacklistTest.txt")
-	// log.Println(frequencyBlacklist)
 	checkers.CheckOptimal(submittedPassword, frequencyBlacklist)
 
 	// setup & open bolt database
@@ -71,13 +70,13 @@ func main() {
 
 	// init mailer
 	if stat, err := os.Stat(configFile); err == nil && !stat.IsDir() {
-		if serverConfig.SMTP != nil {
+		if tipsyConfig.SMTP != nil {
 			mail.InitMailer(
-				serverConfig.SMTP.Server,
-				serverConfig.SMTP.Username,
-				serverConfig.SMTP.Password,
-				serverConfig.SMTP.From,
-				serverConfig.SMTP.Port,
+				tipsyConfig.SMTP.Server,
+				tipsyConfig.SMTP.Username,
+				tipsyConfig.SMTP.Password,
+				tipsyConfig.SMTP.From,
+				tipsyConfig.SMTP.Port,
 			)
 		}
 	} else {
@@ -96,7 +95,7 @@ func main() {
 		FileHandler: &web.FileServer{
 			Handler: http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
 		},
-		UserService: web.NewUserService(boltDB),
+		UserService: web.NewUserService(boltDB, tipsyConfig),
 	}
 
 	// start listening to requests
