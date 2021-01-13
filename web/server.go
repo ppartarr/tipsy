@@ -139,10 +139,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func isHTML(url *url.URL) bool {
 	slice := strings.Split(url.String(), "?")
 
-	if len(slice) > 0 {
-		if strings.HasSuffix(slice[0], "html") {
-			return true
-		}
+	if len(slice) > 0 && strings.HasSuffix(slice[0], "html") {
+		return true
 	}
 	return false
 }
