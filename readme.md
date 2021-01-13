@@ -26,3 +26,4 @@
 
 ## Links
 seclists https://github.com/danielmiessler/SecLists/tree/master/Passwords/Leaked-Databases
+go pake implementation: https://github.com/schollz/pake

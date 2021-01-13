@@ -8,16 +8,19 @@
 #             => rm-last      => passwor
 #
 
+
 # one of always, blacklist, approximateOptimal
 checker: 
   # always verify the submitted password and all passwords in the ball
   # always: false
   # use a blacklist of high-probability passwords. It checks the password or any password in the ball only if it isn't in the blacklist
   # blacklist:
-  #   file:
-  # use a distribution of high-probability passwords (blacklist) and a distribution of typos to decide whether to correct the typo or not
+  #   # list of high-probability passwords used as a blacklist
+  #   file: ./data/blacklistRockYou1000.txt
+  # use a distribution of high-probability passwords (frequency+blacklist) and a distribution of typos to decide whether to correct the typo or not
   optimal:
-    file:
+    # frequency list of high-probability passwords
+    file: ./data/rockyou-withcount1000.txt
     typos:
       # defaut values taken from Chatterjee et al. study on password typo rate
       # total of 96963 password entry attempts
