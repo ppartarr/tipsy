@@ -56,6 +56,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		// redirect reset.html to login.html if there is no token
+		if r.URL.String() == "/reset.html" {
+			http.Error(w, "cannot access reset page without a token", http.StatusUnauthorized)
+			return
+		}
+
 		// if request is for login page & the user has a valid session, redirect to home page
 		// if strings.HasSuffix(r.URL.Path, "login.html") {
 		// 	userID, err := session.GetUserIDInt(w, r)
@@ -67,10 +73,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// 	}
 		// }
 		s.FileHandler.ServeHTTP(w, r)
+		return
 	}
 
 	if isAsset(r.URL.Path) {
 		s.FileHandler.Handler.ServeHTTP(w, r)
+		return
 	}
 
 	switch r.URL.Path {
@@ -86,35 +94,43 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	Disallow: /`))
 		return
 	case "/login":
-		_, err := s.UserService.Login(w, r)
+		err := s.UserService.Login(w, r)
 
-		// TODO if login successfull redirect to home else refresh login page
-		if err == nil {
-			http.Redirect(w, r, "/home.html", 301)
-		} else {
+		if err != nil {
+			log.Println(err.Error())
 			http.Redirect(w, r, "/login.html", 301)
+		} else {
+			http.Redirect(w, r, "/home.html", 301)
 		}
 
 		return
 	case "/register":
-		_, err := s.UserService.Register(w, r)
-		log.Println(err)
+		err := s.UserService.Register(w, r)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		http.Redirect(w, r, "/login.html", 301)
+		return
+	case "/logout":
+		err := s.UserService.Logout(w, r)
 		if err == nil {
+			log.Println(err.Error())
 			http.Redirect(w, r, "/login.html", 301)
 		}
 		return
-	case "/logout":
-		s.UserService.Logout(w, r)
-		// _, err := s.UserService.Logout(w, r)
-		// if err == nil {
-		// 	http.Redirect(w, r, "/login.html", 301)
-		// }
-		return
 	case "/recover":
-		s.UserService.PasswordRecovery(w, r)
+		err := s.UserService.PasswordRecovery(w, r)
+		if err != nil {
+			log.Println(err.Error())
+		}
 		return
-	case "/reset?":
-		s.UserService.PasswordReset(w, r)
+	case "/reset":
+		err := s.UserService.PasswordReset(w, r)
+		if err != nil {
+			log.Println(err.Error())
+		}
 		return
 	default:
 	}

@@ -3,7 +3,7 @@
 <body>
     <div class="centered reset">
         <h1>Password Reset</h1>
-        <form action="/reset?token=" method="post" id="reset-form">
+        <form action="/reset" method="post" id="reset-form">
             <input id="email" type="text" placeholder="Email" name="email"  id="email" required>
             <input id="password" type="password" placeholder="Password" name="password" id="password" required>
             <input id="password-copy" type="password" placeholder="Re-type your password" name="password-copy" required>
@@ -30,7 +30,8 @@
 
         // get reset token from url
         var url = window.location;
-        var access_token = new URLSearchParams(url.hash).get("token");
+        var access_token = window.location.search;
+        console.log(access_token);
 
         // update form action to append token
         document.getElementById("reset-form").action = document.getElementById("reset-form").action + access_token;
