@@ -85,9 +85,10 @@ func main() {
 	}
 
 	// init session
-	log.Println("initializing cookie store, cookies will expire after: ", time.Duration(60)*time.Second)
+	maxAge := int(tipsyConfig.HTTPSessionValidity / time.Second)
+	log.Println("initializing cookie store, cookies will expire after: ", maxAge)
 	session.StorageDir = "./db"
-	session.InitStore(sessionKey, sessionDB, 60)
+	session.InitStore(sessionKey, sessionDB, maxAge)
 
 	// create the server instance
 	var server *web.Server

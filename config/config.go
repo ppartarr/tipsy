@@ -25,9 +25,10 @@ type Server struct {
 		Optimal   *OptimalChecker   `yaml:"optimal"`
 	} `yaml:"checker"`
 
-	Correctors    []string      `yaml:"correctors"`
-	RateLimit     int           `yaml:"rateLimit"`
-	TokenValidity time.Duration `yaml:"tokenValidity"`
+	Correctors          []string      `yaml:"correctors"`
+	RateLimit           int           `yaml:"rateLimit"`
+	TokenValidity       time.Duration `yaml:"resetTokenValidity"`
+	HTTPSessionValidity time.Duration `yaml:"httpSessionValidity"`
 }
 
 // BlacklistChecker represents blacklist checker
@@ -111,10 +112,15 @@ func (s *Server) IsValid() error {
 	}
 
 	// check that rate-limiting is set if not set to 10
-	log.Println(s.RateLimit)
 	if s.RateLimit == 0 {
 		log.Println("rate limiting is not set, using default of 10")
 		s.RateLimit = 10
+	}
+
+	// check that cookie validity is set if not set to 30 min
+	if s.HTTPSessionValidity == 0*time.Second {
+		log.Println("http session validity is not set, using default value of 30 min")
+		s.HTTPSessionValidity = 30 * time.Minute
 	}
 
 	return nil

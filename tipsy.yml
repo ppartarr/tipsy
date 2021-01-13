@@ -62,7 +62,10 @@ correctors:
 rateLimit: 10
 
 # reset link token validity duration in minutes
-tokenValidity: 15m
+resetTokenValidity: 15m
+
+# cookie validity duration in minutes
+httpSessionValidity: 30m
 
 # configure SMTP notifications
 smtp:
