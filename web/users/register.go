@@ -22,6 +22,8 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 		return errors.New("you must submit a valid form")
 	}
 
+	// TODO check that username is an email address
+
 	// check that password & password copy match
 	if r.Form["password"][0] != r.Form["password-copy"][0] {
 		return errors.New("password and password copy don't match")

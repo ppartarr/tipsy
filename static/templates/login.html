@@ -6,6 +6,9 @@
         <form action="/login" method="post">
             <input id="email" type="text" placeholder="Email" name="email" required>
             <input id="password" type="password" placeholder="Password" name="password" required>
+            {{ with .Errors.Login }}
+                <p class="error">{{ . }}</p>
+            {{ end }}
             <button type="submit"><span>Login</span></button>
         </form>
         <p>If you don't have an account

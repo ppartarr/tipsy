@@ -4,40 +4,76 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/mcnijman/go-emailaddress"
 	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/web/session"
 )
 
+// LoginForm represents a login form
+type LoginForm struct {
+	Email    string
+	Password string
+	Errors   map[string]string
+}
+
+var rxEmail = regexp.MustCompile(".+@.+\\..+")
+
+// Validate checks that the fields in the login form are set
+func (form *LoginForm) Validate() bool {
+	form.Errors = make(map[string]string)
+
+	match := rxEmail.Match([]byte(form.Email))
+	if match == false {
+		form.Errors["Login"] = "Username and password incorrect"
+	}
+
+	if strings.TrimSpace(form.Password) == "" {
+		form.Errors["Login"] = "Username and password incorrect"
+	}
+
+	return len(form.Errors) == 0
+}
+
 // Login allows a user to login to their account
-func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) error {
+func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (form *LoginForm, err error) {
 	// TODO handle HEAD, PUT, and PATCH separately
 	if r.Method != "POST" {
 		http.Redirect(w, r, "/login.html", 301)
-		return errors.New("must use POST http method")
+		return nil, errors.New("must use POST http method")
 	}
 
 	// check that a valid form was submitted
 	r.ParseForm()
 	log.Println(r.Form)
-	expectedValues := []string{"email", "password"}
-	if !formIsValid(r.Form, expectedValues) {
-		return errors.New("you must submit a valid form")
+	form = &LoginForm{
+		Email:    r.PostFormValue("email"),
+		Password: r.PostFormValue("password"),
 	}
+
+	if form.Validate() == false {
+		log.Println(form.Errors)
+		return form, errors.New("you must submit a valid form")
+	}
+	// expectedValues := []string{"email", "password"}
+	// if !formIsValid(r.Form, expectedValues) {
+	// 	return errors.New("you must submit a valid form")
+	// }
 
 	// get user from email
 	user, err := userService.getUser(r.Form["email"][0])
 	if err != nil {
-		return errors.New("could not get user " + r.Form["email"][0] + ": " + err.Error())
+		return form, errors.New("could not get user " + r.Form["email"][0] + ": " + err.Error())
 	}
 
 	// validate email
 	log.Println("validating email address")
 	_, err = emailaddress.Parse(r.Form["email"][0])
 	if err != nil {
-		return errors.New("invalid email: %q" + r.Form["email"][0] + ": " + err.Error())
+		return form, errors.New("invalid email: %q" + r.Form["email"][0] + ": " + err.Error())
 	}
 
 	// use one of always, blacklist, optimal

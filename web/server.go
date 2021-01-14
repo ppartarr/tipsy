@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strings"
 
 	"github.com/ppartarr/tipsy/web/session"
@@ -97,13 +98,17 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	Disallow: /`))
 		return
 	case "/login":
-		err := s.UserService.Login(w, r)
+		form, err := s.UserService.Login(w, r)
 
 		if err != nil {
-			log.Println(err.Error())
-			http.Redirect(w, r, "/login.html", 301)
+			if err.Error() == "you must submit a valid form" {
+				log.Println(form)
+				loginHTML := filepath.Join("static", "templates", "/login.html")
+				render(w, loginHTML, form)
+			}
 		} else {
-			http.Redirect(w, r, "/home.html", 301)
+			homeHTML := filepath.Join("static", "templates", "/home.html")
+			render(w, homeHTML, form)
 		}
 
 		return
@@ -118,9 +123,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	case "/logout":
 		err := s.UserService.Logout(w, r)
-		if err == nil {
+		if err != nil {
 			log.Println(err.Error())
-			http.Redirect(w, r, "/login.html", 301)
 		}
 		return
 	case "/recover":

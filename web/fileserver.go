@@ -17,7 +17,6 @@ type FileServer struct {
 }
 
 func (f *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	layoutPage := filepath.Join("static", "templates", "layout.html")
 	filePath := filepath.Join("static", "templates", filepath.Clean(r.URL.Path))
 
 	// return a 404 if the page doesn't exist
@@ -35,19 +34,23 @@ func (f *FileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// generate page from layout
-	tmpl, err := template.ParseFiles(layoutPage, filePath)
-	if err != nil {
-		log.Println(err.Error())
+	// generate page from layoutif err !=
+	render(w, filePath, nil)
+}
 
+// Render renders the HTML file based on the layout template & the interface
+func render(w http.ResponseWriter, filename string, data interface{}) {
+	layoutPage := filepath.Join("static", "templates", "layout.html")
+
+	tmpl, err := template.ParseFiles(layoutPage, filename)
+	if err != nil {
+		log.Println(err)
 		// Return a generic "Internal Server Error" message
 		http.Error(w, http.StatusText(500), 500)
-		return
 	}
 
-	err = tmpl.ExecuteTemplate(w, "layout", nil)
-	if err != nil {
-		log.Println(err.Error())
-		http.Error(w, http.StatusText(500), 500)
+	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+		log.Println(err)
+		http.Error(w, "Sorry, something went wrong", http.StatusInternalServerError)
 	}
 }
