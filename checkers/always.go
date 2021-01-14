@@ -12,14 +12,14 @@ func CheckAlways(password string, numberOfCheckers int) bool {
 	registeredPassword := "password"
 
 	// perform the check
-	var ball []string = getBall(password)
+	var ball []string = GetBall(password)
 	var unionBall []string = append(ball, password)
 
-	return stringInSlice(registeredPassword, unionBall)
+	return StringInSlice(registeredPassword, unionBall)
 }
 
-// this is the union of the ball and the submitted password
-func getBall(password string) []string {
+// GetBall is the union of the ball and the submitted password
+func GetBall(password string) []string {
 	var ball []string
 
 	return append(ball,
@@ -29,11 +29,13 @@ func getBall(password string) []string {
 	)
 }
 
-func stringInSlice(s string, list []string) bool {
+// StringInSlice returns true if s in is list
+func StringInSlice(s string, list []string) bool {
+	success := false
 	for _, value := range list {
 		if value == s {
-			return true
+			success = true
 		}
 	}
-	return false
+	return success
 }
