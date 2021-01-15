@@ -13,14 +13,17 @@ import (
 )
 
 // CheckOptimal use the given distribution of passwords and a distribution of typos to decide whether to correct the typo or not
-func CheckOptimal(submittedPassword string, registeredPassword string, frequencyBlacklist map[string]int, q int) bool {
+func (checker *CheckerService) CheckOptimal(submittedPassword string, registeredPassword string, frequencyBlacklist map[string]int, q int) bool {
 
 	// check the submitted password first
 	if CheckPasswordHash(submittedPassword, registeredPassword) {
 		return true
 	}
 
-	var ball map[string]string = GetBallWithCorrectionType(submittedPassword)
+	// get n best correctors
+	nBestCorrectors := correctors.GetNBestCorrectors(checker.NumberOfCorrectors, checker.TypoFrequency)
+
+	var ball map[string]string = correctors.GetBallWithCorrectionType(submittedPassword, nBestCorrectors)
 	var ballProbability = make(map[string]float64)
 
 	for passwordInBall, correctionType := range ball {
@@ -202,6 +205,7 @@ func CalculateTypoProbability(correctionType string) float64 {
 	typoFixProbability := make(map[string]float64)
 
 	// init frequencies total = 96963
+	// for every corrector, we give the frequency of typos that were corrected by it in Chatterjee et al's study
 	typoFixFrequency := map[string]int{
 		"same":          90234,
 		"other":         1918,
@@ -233,17 +237,6 @@ func CalculateTypoProbability(correctionType string) float64 {
 	}
 
 	return typoFixProbability[correctionType]
-}
-
-// GetBallWithCorrectionType returns the ball with the correction type string
-func GetBallWithCorrectionType(password string) map[string]string {
-	var ball = make(map[string]string)
-
-	ball[correctors.SwitchCaseAll(password)] = "swc-all"
-	ball[correctors.SwitchCaseFirstLetter(password)] = "swc-first"
-	ball[correctors.RemoveLastChar(password)] = "rm-last"
-
-	return ball
 }
 
 // LoadFrequencyBlackList loads a file of frequency + high-probability password e.g. ./data/rockyou-withcount1000.txt

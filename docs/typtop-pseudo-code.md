@@ -5,7 +5,7 @@ user submits password w
 <!-- (𝑝𝑘, 𝑠𝑘) ←$ 𝒦 -->
 generate public/private key pair for user
 <!-- T[0] ←$ E𝑤 (𝑠𝑘) -->
-encrypt the password using the secret key and add it to the typo cache T.add(E(sk, w))
+encrypt the private key using the password and add it to the typo cache T.add(E(sk, w))
 <!-- For 𝑖 = 1, . . . , 𝑡 do T[𝑖] ←$ 𝒞E -->
 warm up the typo cache T.add(E(sk, w1))where w1 is a likely typo of password w
 <!-- For 𝑗 = 1, . . . , 𝜔 do W[𝑗] ←$ ℰ𝑝𝑘 (𝜀) -->
@@ -14,7 +14,6 @@ warm up the wait list {epsilon}pk where epsilon is the empty string
 init cache returns an initial state for the caching scheme, and a set of typo/index pairs
     S0 initial state is simply (password, frequency)
     U0 typo/index pair is null
-
 <!-- 𝑐 ←$ ℰ𝑝𝑘 (S0) -->
 encrypt the initial state of the caching scheme: c = {state}pk
 <!-- For (𝑤, 𝑖 ˜ ) ∈ 𝒰0 do -->
@@ -104,9 +103,9 @@ for every password in the wait list with a frequency > 0
     <!-- 𝑘 ← argmin𝑗 F[𝑗] -->
     k is password with the index of the lowest frequency in the typo cache
     <!-- 𝜈 ← ℳ[𝑤˜′]/(F[𝑘] + ℳ[𝑤˜′]) -->
-    mu is the (frequency of the password in wait list) / (frequency of least used password in typo cache) + (frequency of the password in wait list)
+    nu is the (frequency of the password in wait list) / (frequency of least used password in typo cache) + (frequency of the password in wait list)
     <!-- 𝑑 ← 𝜈 {0, 1} -->
-    wtf is this?
+    if nu < 0.5 d = 0 else d = 1
     <!-- If 𝑑 = 1 then -->
     if d == 1
         <!-- F[𝑘] ← F[𝑘] + ℳ[𝑤˜′] -->
@@ -154,16 +153,6 @@ epsilon is the empty string
 Perm(t) is the set of all permutations for on Zt:
     given t = 3, we have Zt = 0, 1, 2
     Perm(t) = {
-        [],
-        [0],
-        [1],
-        [2],
-        [0, 1],
-        [0, 2],
-        [1, 0],
-        [1, 2],
-        [2, 0],
-        [2, 1],
         [0, 1, 2],
         [0, 2, 1],
         [1, 0, 2],

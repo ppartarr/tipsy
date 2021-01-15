@@ -4,18 +4,23 @@ import (
 	"io/ioutil"
 	"log"
 	"strings"
+
+	"github.com/ppartarr/tipsy/correctors"
 )
 
 // CheckBlacklist uses a blacklist of high-probability passwords. It checks the password or any password in the ball only if it isn't in the blacklist
-func CheckBlacklist(submittedPassword string, registeredPassword string, blacklist []string) bool {
+func (checker *CheckerService) CheckBlacklist(submittedPassword string, registeredPassword string, blacklist []string) bool {
 
 	// check the submitted password first
 	if CheckPasswordHash(submittedPassword, registeredPassword) {
 		return true
 	}
 
+	// get n best correctors
+	nBestCorrectors := correctors.GetNBestCorrectors(checker.NumberOfCorrectors, checker.TypoFrequency)
+
 	// get the ball
-	var ball []string = GetBall(submittedPassword)
+	ball := correctors.GetBall(submittedPassword, nBestCorrectors)
 
 	// constant-time check of the remainder of the ball
 	succcess := false

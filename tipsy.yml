@@ -10,7 +10,7 @@
 
 
 # one of always, blacklist, approximateOptimal
-checker: 
+checker:
   # always verify the submitted password and all passwords in the ball
   # always: true
   # use a blacklist of high-probability passwords. It checks the password or any password in the ball only if it isn't in the blacklist
@@ -21,47 +21,51 @@ checker:
   # optimal:
   #   # frequency list of high-probability passwords
   #   file: ./data/rockyou-withcount1000.txt
-  #   typos:
-  #     # defaut values taken from Chatterjee et al. study on password typo rate
-  #     # total of 96963 password entry attempts
-  #     # you can change the distribution by setting the individual typo frequencies below
-  #       same: 90234
-  #       other: 1918
-  #       swc-all: 1698
-  #       kclose: 1385
-  #       keypress-edit: 1000
-  #       rm-last: 382
-  #       swc-first: 209
-  #       rm-firstc: 55
-  #       sws-last1: 19
-  #       tcerror: 18
-  #       sws-lastn: 14
-  #       upncap: 13
-  #       n2s-last: 9
-  #       cap2up: 5
-  #       add1-last: 5
   #   # find the optimal set of passwords in the ball such that aggregate probability of each password in the ball
   #   # is lower than the probability of the qth most probable password in the blacklist
   #   # try q = 10
   #   qthMostProbablePassword: 10
   typtop:
+    # length of the users private-key
+    rsaKeyLength: 2048
     # maximum Damerau-Levenshtein edit distance
     editDistance: 2
-    # cache type, one of LFU, PLFU, LRU, MFU, Best-t
     typoCache:
-      length:
-      cachingScheme:
+      length: 10
+      # cache type, one of LFU, PLFU, LRU, MFU, Best-t
+      # cachingScheme: LFU
     waitList:
       # should match the rateLimit in practice
-      length:
+      length: 10
 
 
+# must be defined when using the optimal or typtop checker
+typos:
+  # defaut values taken from Chatterjee et al. study on password typo rate
+  # total of 96963 password entry attempts
+  # you can change the distribution by setting the individual typo frequencies below
+  - same: 90234
+  - other: 1918
+  - swc-all: 1698
+  - kclose: 1385
+  - keypress-edit: 1000
+  - rm-last: 382
+  - swc-first: 209
+  - rm-first: 55
+  - sws-last1: 19
+  - tcerror: 18
+  - sws-lastn: 14
+  - upncap: 13
+  - n2s-last: 9
+  - cap2up: 5
+  - add1-last: 5
 
-correctors: 
+# This list defines the correctors to apply e.g. for check always
+# every corrector in the list below will be applied
+# Careful: a longer list means a bigger decrease in security!
+correctors:
 # choose from the list below
-  # - same # use this for testing
   - swc-all
-  - keypress-edit
   - rm-last
   - swc-first
   - rm-first
@@ -71,6 +75,7 @@ correctors:
   - n2s-last
   - cap2up
   - add1-last
+  # - same # use this for testing
 
 # number of login attempts a user can make until they have to unlock the account via email link
 rateLimit: 10

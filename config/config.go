@@ -23,12 +23,14 @@ type Server struct {
 		Always    bool              `yaml:"always"`
 		Blacklist *BlacklistChecker `yaml:"blacklist"`
 		Optimal   *OptimalChecker   `yaml:"optimal"`
+		TypTop    *TypTopChecker    `yaml:"typtop"`
 	} `yaml:"checker"`
 
-	Correctors          []string      `yaml:"correctors"`
-	RateLimit           int           `yaml:"rateLimit"`
-	TokenValidity       time.Duration `yaml:"resetTokenValidity"`
-	HTTPSessionValidity time.Duration `yaml:"httpSessionValidity"`
+	Typos               map[string]int `yaml:"typos"`
+	Correctors          []string       `yaml:"correctors"`
+	RateLimit           int            `yaml:"rateLimit"`
+	TokenValidity       time.Duration  `yaml:"resetTokenValidity"`
+	HTTPSessionValidity time.Duration  `yaml:"httpSessionValidity"`
 }
 
 // BlacklistChecker represents blacklist checker
@@ -40,7 +42,25 @@ type BlacklistChecker struct {
 type OptimalChecker struct {
 	File                    string `yaml:"file"`
 	QthMostProbablePassword int    `yaml:"qthMostProbablePassword"`
-	Typos                   *Typos `yaml:"typos"`
+}
+
+// TypTopChecker represents the typtop checker
+type TypTopChecker struct {
+	RSAKeyLength int       `yaml:"rsaKeyLength"`
+	EditDistance int       `yaml:"editDistance"`
+	TypoCache    TypoCache `yaml:"typoCache"`
+	WaitList     WaitList  `yaml:"waitList"`
+}
+
+// TypoCache represents the config for the typo cache
+type TypoCache struct {
+	Length        int    `yaml:"length"`
+	CachingScheme string `yaml:"LFU"`
+}
+
+// WaitList represents the wait list config
+type WaitList struct {
+	Length int `yaml:"length"`
 }
 
 // Typos represents the distribution of typos
