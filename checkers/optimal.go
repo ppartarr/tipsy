@@ -13,7 +13,13 @@ import (
 )
 
 // CheckOptimal use the given distribution of passwords and a distribution of typos to decide whether to correct the typo or not
-func CheckOptimal(submittedPassword string, registeredPassword string, frequencyBlacklist map[string]int) bool {
+func CheckOptimal(submittedPassword string, registeredPassword string, frequencyBlacklist map[string]int, q int) bool {
+
+	// check the submitted password first
+	if CheckPasswordHash(submittedPassword, registeredPassword) {
+		return true
+	}
+
 	var ball map[string]string = GetBallWithCorrectionType(submittedPassword)
 	var ballProbability = make(map[string]float64)
 
@@ -25,13 +31,15 @@ func CheckOptimal(submittedPassword string, registeredPassword string, frequency
 		typoProbability := CalculateTypoProbability(correctionType)
 
 		// TODO change this to make probs customisable e.g. ngram vs pcfg vs historgram vs pwmodel
-		ballProbability[passwordInBall] = passwordProbability * typoProbability
+		// only add password to ball if passwordProbability * typoProbability > 0
+		if passwordProbability*typoProbability > 0 {
+			ballProbability[passwordInBall] = passwordProbability * typoProbability
+		}
 	}
 
 	// find the optimal set of passwords in the ball such that aggregate probability of each password in the ball
 	// is lower than the probability of the qth most probable password in the blacklist
-	// we use q = 10
-	probabilityOfQthPassword := FindProbabilityOfQthPassword(frequencyBlacklist, 10)
+	probabilityOfQthPassword := FindProbabilityOfQthPassword(frequencyBlacklist, q)
 	cutoff := float64(probabilityOfQthPassword) - CalculateProbabilityPasswordInBlacklist(submittedPassword, frequencyBlacklist)
 
 	// get the set of password that maximises utility subject to completeness and security
@@ -39,14 +47,19 @@ func CheckOptimal(submittedPassword string, registeredPassword string, frequency
 	combinationToTry = FindOptimalSubset(ballProbability, cutoff, frequencyBlacklist)
 
 	log.Println(combinationToTry)
-	for _, password := range combinationToTry.Passwords {
+	log.Println(probabilityOfQthPassword)
+	log.Println(cutoff)
+
+	// constant-time check of the remainder of the ball
+	success := false
+	for _, passwordsInCombination := range combinationToTry.Passwords {
 		// log.Println(password)
-		if registeredPassword == password {
-			return true
+		if CheckPasswordHash(passwordsInCombination, registeredPassword) {
+			success = true
 		}
 	}
 
-	return false
+	return success
 }
 
 // FindProbabilityOfQthPassword given the blacklist, find the probability of the qth password in the distribution

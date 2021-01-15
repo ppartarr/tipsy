@@ -2,20 +2,36 @@ package checkers
 
 import (
 	"github.com/ppartarr/tipsy/correctors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // CheckAlways checks the password and the passwords in the ball by using the given correctors
-func CheckAlways(password string, numberOfCheckers int) bool {
+func CheckAlways(submittedPassword string, registeredPassword string) bool {
 	// TODO make these run in constant time to avoid side-channels
 
-	// TODO get the password from db
-	registeredPassword := "password"
+	// check the submitted password first
+	if CheckPasswordHash(submittedPassword, registeredPassword) {
+		return true
+	}
 
-	// perform the check
-	var ball []string = GetBall(password)
-	var unionBall []string = append(ball, password)
+	// get the ball
+	var ball []string = GetBall(submittedPassword)
 
-	return StringInSlice(registeredPassword, unionBall)
+	// constant-time check of the remainder of the ball
+	success := false
+	for _, value := range ball {
+		if CheckPasswordHash(value, registeredPassword) {
+			success = true
+		}
+	}
+
+	return success
+}
+
+// CheckPasswordHash verifies that the password arguments matches the given hash
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 // GetBall is the union of the ball and the submitted password
