@@ -2,6 +2,7 @@ package correctors
 
 import (
 	"log"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -12,6 +13,7 @@ func Same(password string) string {
 }
 
 // SwitchCaseFirstLetter switches the case of the first letter in the string to upper case
+// swc-first
 func SwitchCaseFirstLetter(password string) string {
 	// we avoid toTitle in case the password contains a space
 	for index, value := range password {
@@ -26,6 +28,7 @@ func SwitchCaseFirstLetter(password string) string {
 }
 
 // SwitchCaseAll switches the case of all the letters in the string
+// swc-all
 func SwitchCaseAll(password string) string {
 	newPassword := ""
 	for _, value := range password {
@@ -41,6 +44,7 @@ func SwitchCaseAll(password string) string {
 }
 
 // RemoveLastChar removes the last character from the string
+// rm-last
 func RemoveLastChar(password string) string {
 	lastCharRune, size := utf8.DecodeLastRuneInString(password)
 	if lastCharRune == utf8.RuneError && (size == 0 || size == 1) {
@@ -51,6 +55,7 @@ func RemoveLastChar(password string) string {
 }
 
 // RemoveFirstChar removes the first character from the string
+// rm-first
 func RemoveFirstChar(password string) string {
 	firstCharRune, size := utf8.DecodeRuneInString(password)
 	if firstCharRune == utf8.RuneError && (size == 0 || size == 1) {
@@ -58,4 +63,108 @@ func RemoveFirstChar(password string) string {
 		size = 0
 	}
 	return password[size:]
+}
+
+// CapitalToUpper returns the password with every letter capitalised. For when users press shift-key instead of caps-lock
+// cap2up
+func CapitalToUpper(password string) string {
+	if strings.Title(password) == password {
+		return strings.ToUpper(password)
+	}
+	return password
+}
+
+// UpperToCapital returns the password with every letter capitalised. For when users press caps-lock instead of shift
+// up2cap
+func UpperToCapital(password string) string {
+	if strings.ToUpper(password) == password {
+		return strings.Title(strings.ToLower(password))
+	}
+	return password
+}
+
+// ConvertLastNumberToSymbol converts the last number to a symbol - TODO should depend on keyboard layout
+// n2s-last
+func ConvertLastNumberToSymbol(password string) string {
+	lastCharRune, size := utf8.DecodeLastRuneInString(password)
+	if lastCharRune == utf8.RuneError && (size == 0 || size == 1) {
+		log.Fatal("Unable to decode the size of the last rune")
+		size = 0
+	}
+	if unicode.IsDigit(lastCharRune) {
+		return password[:len(password)-size] + shiftSwitchMap[string(lastCharRune)]
+	}
+	return password
+}
+
+// SwitchShiftLastCharacter changes the last character according to the appropriate shift modifier
+// sws-last1
+func SwitchShiftLastCharacter(password string) string {
+	lastCharRune, size := utf8.DecodeLastRuneInString(password)
+	if lastCharRune == utf8.RuneError && (size == 0 || size == 1) {
+		log.Fatal("Unable to decode the size of the last rune")
+		size = 0
+	}
+	if unicode.IsDigit(lastCharRune) || unicode.IsSymbol(lastCharRune) || unicode.IsPunct(lastCharRune) {
+		return password[:len(password)-size] + shiftSwitchMap[string(lastCharRune)]
+	} else if unicode.IsLetter(lastCharRune) {
+		if unicode.IsUpper(lastCharRune) {
+			return password[:len(password)-size] + string(unicode.ToLower(lastCharRune))
+		} else if unicode.IsLower(lastCharRune) {
+			return password[:len(password)-size] + string(unicode.ToUpper(lastCharRune))
+		}
+	}
+	return password
+}
+
+// AppendOne adds a 1 to the password
+// add1_last
+func AppendOne(password string) string {
+	return password + "1"
+}
+
+// Keyboard layout dependent
+var shiftSwitchMap = map[string]string{
+	"`":  "~",
+	"1":  "!",
+	"2":  "@",
+	"3":  "#",
+	"4":  "$",
+	"5":  "%",
+	"6":  "^",
+	"7":  "&",
+	"8":  "*",
+	"9":  "(",
+	"0":  ")",
+	"-":  "_",
+	"=":  "+",
+	"[":  "{",
+	"]":  "}",
+	"\\": "|",
+	";":  ":",
+	"'":  "\"",
+	",":  "<",
+	".":  ">",
+	"/":  "?",
+	"~":  "`",
+	"!":  "1",
+	"@":  "2",
+	"#":  "3",
+	"$":  "4",
+	"%":  "5",
+	"^":  "6",
+	"&":  "7",
+	"*":  "8",
+	"(":  "9",
+	")":  "0",
+	"_":  "-",
+	"+":  "=",
+	"{":  "[",
+	"}":  "]",
+	"|":  "\\",
+	":":  ";",
+	"\"": "'",
+	"<":  ",",
+	">":  ".",
+	"?":  "/",
 }

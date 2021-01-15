@@ -59,14 +59,13 @@ checker:
 
 correctors: 
 # choose from the list below
-  - same
+  # - same # use this for testing
   - swc-all
-  - kclose
   - keypress-edit
   - rm-last
   - swc-first
+  - rm-first
   - sws-last1
-  - tcerror
   - sws-lastn
   - upncap
   - n2s-last
