@@ -116,6 +116,24 @@ func TestSwitchShiftLastCharacter(t *testing.T) {
 	}
 }
 
+func TestSwitchShiftLastNCharacters(t *testing.T) {
+	if SwitchShiftLastNCharacters("password", 3) != "passwORD" {
+		t.Errorf("should capitalise the last character if it's a letter")
+	}
+
+	if SwitchShiftLastNCharacters("passworD", 3) != "passwORd" {
+		t.Errorf("should capitalise the last character if it's a letter")
+	}
+
+	if SwitchShiftLastNCharacters("password123", 3) != "password!@#" {
+		t.Errorf("should replace the last number with the appropriate symbol (determined by the shift modifier)")
+	}
+
+	if SwitchShiftLastNCharacters("passwoRd!", 3) != "passworD1" {
+		t.Errorf("should replace the last symbol with the appropriate number (determined by the shift modifier)")
+	}
+}
+
 func TestAppendOne(t *testing.T) {
 	if AppendOne("password") != "password1" {
 		t.Errorf("should add 1 to the end of the string")

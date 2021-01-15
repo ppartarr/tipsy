@@ -117,6 +117,18 @@ func SwitchShiftLastCharacter(password string) string {
 	return password
 }
 
+// SwitchShiftLastNCharacters changes the last n characters according to the appropriate shift modifier
+// sws-lastn
+func SwitchShiftLastNCharacters(password string, n int) string {
+	temp := password
+	for i := 1; i <= n; i++ {
+		// TODO improve this, it's very hacky...
+		temp = SwitchShiftLastCharacter(temp[:len(temp)-(n-i)]) + password[len(password)-(n-i):]
+	}
+
+	return temp
+}
+
 // AppendOne adds a 1 to the password
 // add1_last
 func AppendOne(password string) string {
