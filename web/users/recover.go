@@ -58,6 +58,8 @@ func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.
 	return nil
 }
 
+// checks that the form isn't empty...
+// TODO improve this by adding length requirements
 func formIsValid(form url.Values, expectedValues []string) bool {
 	for _, value := range expectedValues {
 		if len(form) == 0 || len(form[value]) == 0 {

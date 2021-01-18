@@ -25,18 +25,24 @@ checker:
   #   # is lower than the probability of the qth most probable password in the blacklist
   #   # try q = 10
   #   qthMostProbablePassword: 10
-  typtop:
-    # length of the users private-key
-    rsaKeyLength: 2048
-    # maximum Damerau-Levenshtein edit distance
-    editDistance: 2
-    typoCache:
-      length: 10
-      # cache type, one of LFU, PLFU, LRU, MFU, Best-t
-      # cachingScheme: LFU
-    waitList:
-      # should match the rateLimit in practice
-      length: 10
+  # typtop:
+  #   # public key encryption algorithm
+  #   pke:
+  #     # length of the users private-key
+  #     keyLength: 2048
+  #   # password based encryption scheme
+  #   pbe:
+  #     keyLength: 4096
+  #   # maximum Damerau-Levenshtein edit distance
+  #   editDistance: 2
+  #   typoCache:
+  #     warmUp: true
+  #     length: 10
+  #     # cache type, one of LFU, PLFU, LRU, MFU, Best-t
+  #     # cachingScheme: LFU
+  #   waitList:
+  #     # should match the rateLimit in practice
+  #     length: 10
 
 
 # must be defined when using the optimal or typtop checker
@@ -44,21 +50,21 @@ typos:
   # defaut values taken from Chatterjee et al. study on password typo rate
   # total of 96963 password entry attempts
   # you can change the distribution by setting the individual typo frequencies below
-  - same: 90234
-  - other: 1918
-  - swc-all: 1698
-  - kclose: 1385
-  - keypress-edit: 1000
-  - rm-last: 382
-  - swc-first: 209
-  - rm-first: 55
-  - sws-last1: 19
-  - tcerror: 18
-  - sws-lastn: 14
-  - upncap: 13
-  - n2s-last: 9
-  - cap2up: 5
-  - add1-last: 5
+  same: 90234
+  other: 1918
+  swc-all: 1698
+  kclose: 1385
+  keypress-edit: 1000
+  rm-last: 382
+  swc-first: 209
+  rm-first: 55
+  sws-last1: 19
+  tcerror: 18
+  sws-lastn: 14
+  upncap: 13
+  n2s-last: 9
+  cap2up: 5
+  add1-last: 5
 
 # This list defines the correctors to apply e.g. for check always
 # every corrector in the list below will be applied
@@ -68,13 +74,13 @@ correctors:
   - swc-all
   - rm-last
   - swc-first
-  - rm-first
-  - sws-last1
-  - sws-lastn
-  - upncap
-  - n2s-last
-  - cap2up
-  - add1-last
+  # - rm-first
+  # - sws-last1
+  # - sws-lastn
+  # - upncap
+  # - n2s-last
+  # - cap2up
+  # - add1-last
   # - same # use this for testing
 
 # number of login attempts a user can make until they have to unlock the account via email link
