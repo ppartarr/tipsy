@@ -46,16 +46,28 @@ type OptimalChecker struct {
 
 // TypTopChecker represents the typtop checker
 type TypTopChecker struct {
-	RSAKeyLength int       `yaml:"rsaKeyLength"`
-	EditDistance int       `yaml:"editDistance"`
-	TypoCache    TypoCache `yaml:"typoCache"`
-	WaitList     WaitList  `yaml:"waitList"`
+	PublicKeyEncryption     PublicKeyEncryption     `yaml:"pke"`
+	PasswordBasedEncryption PasswordBasedEncryption `yaml:"pbe"`
+	EditDistance            int                     `yaml:"editDistance"`
+	TypoCache               TypoCache               `yaml:"typoCache"`
+	WaitList                WaitList                `yaml:"waitList"`
+}
+
+// PublicKeyEncryption represents the PKE scheme used for typtop
+type PublicKeyEncryption struct {
+	KeyLength int `yaml:"keyLength"`
+}
+
+// PasswordBasedEncryption represents the PBE scheme used for typtop
+type PasswordBasedEncryption struct {
+	KeyLength int `yaml:"keyLength"`
 }
 
 // TypoCache represents the config for the typo cache
 type TypoCache struct {
 	Length        int    `yaml:"length"`
 	CachingScheme string `yaml:"LFU"`
+	WarmUp        bool   `yaml:"warmUp"`
 }
 
 // WaitList represents the wait list config
@@ -143,7 +155,22 @@ func (s *Server) IsValid() error {
 		s.HTTPSessionValidity = 30 * time.Minute
 	}
 
+	// validate typtop
+	if s.Checker.TypTop != nil {
+		s.validateTypTop()
+	}
+
 	return nil
+}
+
+func (s *Server) validateTypTop() {
+	if s.Checker.TypTop.PublicKeyEncryption.KeyLength == 0 {
+		log.Fatal("please set your pke key length")
+	}
+
+	if s.Checker.TypTop.PasswordBasedEncryption.KeyLength == 0 {
+		log.Fatal("please set your pbe key length")
+	}
 }
 
 func (s *Server) validateNumberOfCheckers() error {
@@ -158,6 +185,10 @@ func (s *Server) validateNumberOfCheckers() error {
 	}
 
 	if s.Checker.Optimal != nil {
+		numberOfCheckers++
+	}
+
+	if s.Checker.TypTop != nil {
 		numberOfCheckers++
 	}
 

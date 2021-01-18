@@ -5,8 +5,14 @@
         <h1>Create an account</h1>
         <form action="/register" method="post">
             <input id="email" type="text" placeholder="Email" name="email"  id="email" required>
+            {{ with .Errors.Email }}
+                <p class="error">{{ . }}</p>
+            {{ end }}
             <input id="password" type="password" placeholder="Password" name="password" id="password" required>
             <input id="password-copy" type="password" placeholder="Re-type your password" name="password-copy" required>
+            {{ with .Errors.Password }}
+                <p class="error">{{ . }}</p>
+            {{ end }}
             <div class="progress">
                 <div id="strength-progress-bar" class="progress-bar"></div>
             </div>

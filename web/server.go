@@ -113,13 +113,21 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		return
 	case "/register":
-		err := s.UserService.Register(w, r)
+		form, err := s.UserService.Register(w, r)
 		if err != nil {
-			log.Println(err)
-			return
+			log.Println(err.Error())
+			if err.Error() == "you must submit a valid form" {
+				log.Println(form)
+				registerHTML := filepath.Join("static", "templates", "/registration.html")
+				log.Println("rendering registration form")
+				render(w, registerHTML, form)
+			}
+		} else {
+			homeHTML := filepath.Join("static", "templates", "/home.html")
+			render(w, homeHTML, form)
 		}
 
-		http.Redirect(w, r, "/login.html", 301)
+		// http.Redirect(w, r, "/login.html", 301)
 		return
 	case "/logout":
 		err := s.UserService.Logout(w, r)

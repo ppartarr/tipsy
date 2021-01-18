@@ -70,7 +70,7 @@ func CheckPasswordHash(password, hash string) bool {
 
 func (userService *UserService) incrementLoginAttempts(user *User) error {
 	user.LoginAttempts++
-	log.Println(user.LoginAttempts)
+	log.Println("incrementing user attempts: ", user.LoginAttempts)
 
 	return userService.db.Update(func(tx *bolt.Tx) error {
 		// Retrieve the users bucket

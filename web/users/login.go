@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -20,16 +19,9 @@ type LoginForm struct {
 	Errors   map[string]string
 }
 
-var rxEmail = regexp.MustCompile(".+@.+\\..+")
-
 // Validate checks that the fields in the login form are set
 func (form *LoginForm) Validate() bool {
 	form.Errors = make(map[string]string)
-
-	match := rxEmail.Match([]byte(form.Email))
-	if match == false {
-		form.Errors["Login"] = "Username and password incorrect"
-	}
 
 	if strings.TrimSpace(form.Password) == "" {
 		form.Errors["Login"] = "Username and password incorrect"
@@ -77,7 +69,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 	}
 
 	// init the checker service
-	checkerService := checkers.NewCheckerService(userService.config.Typos, len(userService.config.Correctors))
+	checkerService := checkers.NewCheckerService(userService.config.Typos, userService.config.Correctors)
 
 	// use one of always, blacklist, optimal
 	if userService.config.Checker.Always {

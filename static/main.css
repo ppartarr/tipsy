@@ -31,6 +31,10 @@ body {
     background: #F7F7F2;
 }
 
+.error {
+  color: red;
+}
+
 .login {
     width: 30rem;
 }
