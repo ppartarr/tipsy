@@ -14,11 +14,8 @@ func (checker *CheckerService) CheckAlways(submittedPassword string, registeredP
 		return true
 	}
 
-	// get n best correctors
-	nBestCorrectors := correctors.GetNBestCorrectors(checker.NumberOfCorrectors, checker.TypoFrequency)
-
 	// get the ball
-	ball := correctors.GetBall(submittedPassword, nBestCorrectors)
+	ball := correctors.GetBall(submittedPassword, checker.Correctors)
 
 	// constant-time check of the remainder of the ball
 	success := false

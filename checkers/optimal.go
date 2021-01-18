@@ -20,10 +20,7 @@ func (checker *CheckerService) CheckOptimal(submittedPassword string, registered
 		return true
 	}
 
-	// get n best correctors
-	nBestCorrectors := correctors.GetNBestCorrectors(checker.NumberOfCorrectors, checker.TypoFrequency)
-
-	var ball map[string]string = correctors.GetBallWithCorrectionType(submittedPassword, nBestCorrectors)
+	var ball map[string]string = correctors.GetBallWithCorrectionType(submittedPassword, checker.Correctors)
 	var ballProbability = make(map[string]float64)
 
 	for passwordInBall, correctionType := range ball {

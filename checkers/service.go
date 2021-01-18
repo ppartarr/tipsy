@@ -2,14 +2,14 @@ package checkers
 
 // CheckerService represents a checker service...
 type CheckerService struct {
-	TypoFrequency      map[string]int
-	NumberOfCorrectors int
+	TypoFrequency map[string]int
+	Correctors    []string
 }
 
 // NewCheckerService initialises the CheckerService
-func NewCheckerService(typoFrequency map[string]int, numberOfCorrectors int) (checker *CheckerService) {
+func NewCheckerService(typoFrequency map[string]int, correctors []string) (checker *CheckerService) {
 	return &CheckerService{
-		TypoFrequency:      typoFrequency,
-		NumberOfCorrectors: numberOfCorrectors,
+		TypoFrequency: typoFrequency,
+		Correctors:    correctors,
 	}
 }
