@@ -1,6 +1,6 @@
 module github.com/ppartarr/tipsy
 
-go 1.13
+go 1.15
 
 require (
 	github.com/Azure/azure-sdk-for-go v49.2.0+incompatible
@@ -11,6 +11,7 @@ require (
 	github.com/blevesearch/bleve v1.0.14
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.2.1
+	github.com/hbollon/go-edlib v1.3.3
 	github.com/matcornic/hermes/v2 v2.1.0
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mcnijman/go-emailaddress v1.1.0
