@@ -26,11 +26,33 @@ type Server struct {
 		TypTop    *TypTopChecker    `yaml:"typtop"`
 	} `yaml:"checker"`
 
-	Typos               map[string]int `yaml:"typos"`
-	Correctors          []string       `yaml:"correctors"`
-	RateLimit           int            `yaml:"rateLimit"`
-	TokenValidity       time.Duration  `yaml:"resetTokenValidity"`
-	HTTPSessionValidity time.Duration  `yaml:"httpSessionValidity"`
+	Typos      map[string]int `yaml:"typos"`
+	Correctors []string       `yaml:"correctors"`
+	Web        *Web           `yaml:"web"`
+}
+
+// Web is the config for the webserver
+type Web struct {
+	Register *Register `yaml:"register"`
+	Login    *Login    `yaml:"login"`
+	Reset    *Reset    `yaml:"reset"`
+}
+
+// Register represents the registration page & API
+type Register struct {
+	Blacklist string `yaml:"blacklist"`
+	Zxcvbn    int    `yaml:"zxcvbn"`
+}
+
+// Login represents the login page & API
+type Login struct {
+	RateLimit       int           `yaml:"rateLimit"`
+	SessionValidity time.Duration `yaml:"sessionValidity"`
+}
+
+// Reset represents the reset & API
+type Reset struct {
+	TokenValidity time.Duration `yaml:"tokenValidity"`
 }
 
 // BlacklistChecker represents blacklist checker
@@ -138,21 +160,21 @@ func (s *Server) IsValid() error {
 	}
 
 	// check that token validity is set if not set to 15 min
-	if s.TokenValidity == 0*time.Second {
+	if s.Web.Reset.TokenValidity == 0*time.Second {
 		log.Println("token validity is not set, using default value of 15 min")
-		s.TokenValidity = 15 * time.Minute
+		s.Web.Reset.TokenValidity = 15 * time.Minute
 	}
 
 	// check that rate-limiting is set if not set to 10
-	if s.RateLimit == 0 {
+	if s.Web.Login.RateLimit == 0 {
 		log.Println("rate limiting is not set, using default of 10")
-		s.RateLimit = 10
+		s.Web.Login.RateLimit = 10
 	}
 
 	// check that cookie validity is set if not set to 30 min
-	if s.HTTPSessionValidity == 0*time.Second {
+	if s.Web.Login.SessionValidity == 0*time.Second {
 		log.Println("http session validity is not set, using default value of 30 min")
-		s.HTTPSessionValidity = 30 * time.Minute
+		s.Web.Login.SessionValidity = 30 * time.Minute
 	}
 
 	// validate typtop

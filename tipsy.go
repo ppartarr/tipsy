@@ -67,7 +67,7 @@ func main() {
 	}
 
 	// init session
-	maxAge := int(tipsyConfig.HTTPSessionValidity / time.Second)
+	maxAge := int(tipsyConfig.Web.Login.SessionValidity / time.Second)
 	log.Println("initializing cookie store, cookies will expire after: ", maxAge)
 	session.StorageDir = "./db"
 	session.InitStore(sessionKey, sessionDB, maxAge)

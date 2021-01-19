@@ -44,6 +44,21 @@ checker:
   #     # should match the rateLimit in practice
   #     length: 10
 
+web:
+  register:
+    # An optional blacklist used during user registration
+    blacklist: ./data/blacklistRockYou1000.txt
+    # required zxcvbn strength out of 4. 0 being lowest and 4 being the highest: https://lowe.github.io/tryzxcvbn/
+    zxcvbn: 3
+  login:
+    # number of login attempts a user can make until they have to unlock the account via email link
+    rateLimit: 10
+    # cookie validity duration in minutes
+    sessionValidity: 30m
+  reset:
+    # reset link token validity duration in minutes
+    tokenValidity: 15m
+
 
 # must be defined when using the optimal or typtop checker
 typos:
@@ -82,15 +97,6 @@ correctors:
   # - cap2up
   # - add1-last
   # - same # use this for testing
-
-# number of login attempts a user can make until they have to unlock the account via email link
-rateLimit: 10
-
-# reset link token validity duration in minutes
-resetTokenValidity: 15m
-
-# cookie validity duration in minutes
-httpSessionValidity: 30m
 
 # configure SMTP notifications
 smtp:

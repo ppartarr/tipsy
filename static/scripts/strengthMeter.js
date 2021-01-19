@@ -29,6 +29,7 @@
 		});
 
 		function UpdateProgressBar() {
+			const submitButton = document.getElementById("submit");
 			var progressBar = settings.progressBar;
 			var password = $(settings.passwordInput).val();
 			if (password) {
@@ -41,26 +42,31 @@
 					//bad
 					$(progressBar).removeClass(settings.allProgressBarClasses).addClass(settings.badBarClass);
 					$(progressBar).html(settings.ratings[0]);
+					submitButton.disabled = true;
 				}
 				else if (result.score == 1) {
 					//weak
 					$(progressBar).removeClass(settings.allProgressBarClasses).addClass(settings.weakBarClass);
 					$(progressBar).html(settings.ratings[1]);
+					submitButton.disabled = true;
 				}
 				else if (result.score == 2) {
 					//ok
 					$(progressBar).removeClass(settings.allProgressBarClasses).addClass(settings.mediumBarClass);
 					$(progressBar).html(settings.ratings[2]);
+					submitButton.disabled = true;
 				}
 				else if (result.score == 3) {
 					//strong
 					$(progressBar).removeClass(settings.allProgressBarClasses).addClass(settings.strongBarClass);
 					$(progressBar).html(settings.ratings[3]);
+					submitButton.disabled = false;
 				}
 				else if (result.score == 4) {
 					//very strong
 					$(progressBar).removeClass(settings.allProgressBarClasses).addClass(settings.veryStrongBarClass);
 					$(progressBar).html(settings.ratings[4]);
+					submitButton.disabled = false;
 				}
 			}
 			else {

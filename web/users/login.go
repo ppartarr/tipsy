@@ -117,7 +117,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 
 func (userService *UserService) checkLoginAttempts(w http.ResponseWriter, r *http.Request, user *User) error {
 	// increment login attempts
-	if user.LoginAttempts < userService.config.RateLimit {
+	if user.LoginAttempts < userService.config.Web.Login.RateLimit {
 		userService.incrementLoginAttempts(user)
 	} else {
 		log.Println("user has attempted to login too many times")

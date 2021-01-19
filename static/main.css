@@ -96,6 +96,10 @@ button:hover span:after {
     right: 0;
 }
 
+button:disabled {
+  background: #15272f;
+}
+
 h1 {
     font-size: 4rem;
 }

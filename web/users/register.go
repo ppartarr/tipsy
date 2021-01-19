@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 
+	"github.com/nbutton23/zxcvbn-go"
+	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/checkers/typtop"
 )
 
@@ -22,7 +25,7 @@ type RegistrationForm struct {
 var rxEmail = regexp.MustCompile(".+@.+\\..+")
 
 // Validate checks that the fields in the login form are set
-func (form *RegistrationForm) Validate(submittedForm url.Values) bool {
+func (form *RegistrationForm) Validate(submittedForm url.Values, blacklistFile string, zxcvbnScore int) bool {
 	form.Errors = make(map[string]string)
 
 	// check that username is an email address
@@ -40,9 +43,23 @@ func (form *RegistrationForm) Validate(submittedForm url.Values) bool {
 		form.Errors["Password"] = "Passwords should match"
 	}
 
-	// TODO only register password if it is 3/4 in zxcbn-go
+	// check if password is in blacklist
+	blacklist := checkers.LoadBlacklist(blacklistFile)
+	if checkers.StringInSlice(submittedForm["password"][0], blacklist) {
+		form.Errors["Password"] = "Password is too forbidden"
+	}
+
+	// only register password if it is 3/4 in zxcbn-go
+	score := zxcvbn.PasswordStrength(submittedForm["password"][0], blacklist)
+	if score.Score < zxcvbnScore {
+		form.Errors["Password"] = "Password should be at least " + strconv.Itoa(zxcvbnScore) + "/4 in zxcvbn"
+	}
 
 	return len(form.Errors) == 0
+}
+
+func (form *RegistrationForm) addFormError(key string, value string) {
+	form.Errors[key] = value
 }
 
 // Register allows a user to register a new account
@@ -63,7 +80,7 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 	}
 
 	// validate form
-	if form.Validate(r.Form) == false {
+	if form.Validate(r.Form, userService.config.Web.Register.Blacklist, userService.config.Web.Register.Zxcvbn) == false {
 		log.Println(form.Errors)
 		return form, errors.New("you must submit a valid form")
 	}
@@ -74,7 +91,9 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 		// check that email isn't already registered
 		typtopUser, err := userService.getTypTopUser(r.Form["email"][0])
 		if typtopUser != nil {
-			return nil, errors.New("typtop user already with email " + r.Form["email"][0] + " is already registered")
+			log.Println("typtop user already with email " + r.Form["email"][0] + " is already registered")
+			form.addFormError("Email", "Email already registered")
+			return form, errors.New("you must submit a valid form")
 		}
 
 		// init the checker service
@@ -100,7 +119,9 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 		// check that email isn't already registered
 		user, err := userService.getUser(r.Form["email"][0])
 		if user != nil {
-			return nil, errors.New("user already with email " + r.Form["email"][0] + " is already registered")
+			log.Println("user already with email " + r.Form["email"][0] + " is already registered")
+			form.addFormError("Email", "Email already registered")
+			return form, errors.New("you must submit a valid form")
 		}
 
 		passwordHash, err := HashPassword(r.Form["password"][0])

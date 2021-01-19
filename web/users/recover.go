@@ -28,12 +28,12 @@ func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.
 
 	log.Println("there")
 
-	log.Println(userService.config.TokenValidity)
-	log.Println(userService.config.TokenValidity * time.Minute)
+	log.Println(userService.config.Web.Reset.TokenValidity)
+	log.Println(userService.config.Web.Reset.TokenValidity * time.Minute)
 
 	token := &Token{
 		Email:     r.Form["email"][0],
-		TTL:       userService.config.TokenValidity,
+		TTL:       userService.config.Web.Reset.TokenValidity,
 		CreatedAt: time.Now().Local(),
 	}
 
