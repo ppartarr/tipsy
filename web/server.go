@@ -108,7 +108,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			homeHTML := filepath.Join("static", "templates", "/home.html")
-			render(w, homeHTML, form)
+			render(w, homeHTML, nil)
 		}
 
 		return
@@ -124,7 +124,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			homeHTML := filepath.Join("static", "templates", "/home.html")
-			render(w, homeHTML, form)
+			render(w, homeHTML, nil)
 		}
 
 		// http.Redirect(w, r, "/login.html", 301)
@@ -134,18 +134,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err.Error())
 		}
+		loginHTML := filepath.Join("static", "templates", "/login.html")
+		render(w, loginHTML, nil)
 		return
 	case "/recover":
 		err := s.UserService.PasswordRecovery(w, r)
 		if err != nil {
 			log.Println(err.Error())
 		}
+		resetHTML := filepath.Join("static", "templates", "/reset.html")
+		render(w, resetHTML, nil)
 		return
 	case "/reset":
 		err := s.UserService.PasswordReset(w, r)
 		if err != nil {
 			log.Println(err.Error())
 		}
+		loginHTML := filepath.Join("static", "templates", "/login.html")
+		render(w, loginHTML, nil)
 		return
 	default:
 	}

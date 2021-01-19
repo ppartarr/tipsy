@@ -50,10 +50,6 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		log.Println(form.Errors)
 		return form, errors.New("you must submit a valid form")
 	}
-	// expectedValues := []string{"email", "password"}
-	// if !formIsValid(r.Form, expectedValues) {
-	// 	return errors.New("you must submit a valid form")
-	// }
 
 	// get user from email
 	user, err := userService.getUser(r.Form["email"][0])
