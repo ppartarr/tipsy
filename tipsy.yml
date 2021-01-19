@@ -25,31 +25,33 @@ checker:
   #   # is lower than the probability of the qth most probable password in the blacklist
   #   # try q = 10
   #   qthMostProbablePassword: 10
-  # typtop:
-  #   # public key encryption algorithm
-  #   pke:
-  #     # length of the users private-key
-  #     keyLength: 2048
-  #   # password based encryption scheme
-  #   pbe:
-  #     keyLength: 4096
-  #   # maximum Damerau-Levenshtein edit distance
-  #   editDistance: 2
-  #   typoCache:
-  #     warmUp: true
-  #     length: 10
-  #     # cache type, one of LFU, PLFU, LRU, MFU, Best-t
-  #     # cachingScheme: LFU
-  #   waitList:
-  #     # should match the rateLimit in practice
-  #     length: 10
+  typtop:
+    # public key encryption algorithm
+    pke:
+      # length of the users private-key
+      keyLength: 2048
+    # password based encryption scheme
+    pbe:
+      keyLength: 4096
+    # maximum edit distance using damereau-levenstein
+    editDistance: 2
+    # minimum zxcvbn-go score
+    zxcvbn: 3
+    typoCache:
+      warmUp: true
+      length: 10
+      # cache type, one of LFU, PLFU, LRU, MFU, Best-t
+      # cachingScheme: LFU
+    waitList:
+      # should match the rateLimit in practice
+      length: 10
 
 web:
   register:
     # An optional blacklist used during user registration
     blacklist: ./data/blacklistRockYou1000.txt
     # required zxcvbn strength out of 4. 0 being lowest and 4 being the highest: https://lowe.github.io/tryzxcvbn/
-    zxcvbn: 3
+    zxcvbn: 2
   login:
     # number of login attempts a user can make until they have to unlock the account via email link
     rateLimit: 10

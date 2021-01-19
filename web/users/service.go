@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/ppartarr/tipsy/checkers/typtop"
 	"github.com/ppartarr/tipsy/config"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/crypto/bcrypt"
@@ -47,6 +48,13 @@ func NewUserService(db *bolt.DB, tipsyConfig *config.Server) (userService *UserS
 		if err != nil {
 			return errors.New("create bucket: " + err.Error())
 		}
+		if tipsyConfig.Checker.TypTop != nil {
+			// create typtop users bucket
+			_, err = tx.CreateBucketIfNotExists([]byte("typtopUsers"))
+			if err != nil {
+				return errors.New("create bucket: " + err.Error())
+			}
+		}
 		return nil
 	})
 
@@ -69,6 +77,30 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 func (userService *UserService) incrementLoginAttempts(user *User) error {
+	user.LoginAttempts++
+	log.Println("incrementing user attempts: ", user.LoginAttempts)
+
+	return userService.db.Update(func(tx *bolt.Tx) error {
+		// Retrieve the users bucket
+		// This should be created when the DB is first opened.
+		bucket := tx.Bucket([]byte("users"))
+
+		if bucket == nil {
+			return errors.New("bucket users not found")
+		}
+
+		// Marshal user data into bytes
+		buf, err := json.Marshal(user)
+		if err != nil {
+			return err
+		}
+
+		// Persist bytes to users bucket
+		return bucket.Put([]byte(user.Email), buf)
+	})
+}
+
+func (userService *UserService) incrementTypTopLoginAttempts(user *typtop.User) error {
 	user.LoginAttempts++
 	log.Println("incrementing user attempts: ", user.LoginAttempts)
 

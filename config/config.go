@@ -71,6 +71,7 @@ type TypTopChecker struct {
 	PublicKeyEncryption     PublicKeyEncryption     `yaml:"pke"`
 	PasswordBasedEncryption PasswordBasedEncryption `yaml:"pbe"`
 	EditDistance            int                     `yaml:"editDistance"`
+	Zxcvbn                  int                     `yaml:"zxcvbn"`
 	TypoCache               TypoCache               `yaml:"typoCache"`
 	WaitList                WaitList                `yaml:"waitList"`
 }

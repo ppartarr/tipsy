@@ -79,8 +79,6 @@ func (userService *UserService) getUser(email string) (user *User, err error) {
 		return nil
 	})
 
-	log.Println("this should run")
-
 	if err != nil {
 		return nil, err
 	}
@@ -90,11 +88,11 @@ func (userService *UserService) getUser(email string) (user *User, err error) {
 	return user, nil
 }
 
-func (userService *UserService) createTypTopUser(user *typtop.TypTopUser) error {
+func (userService *UserService) createTypTopUser(user *typtop.User) error {
 	return userService.db.Update(func(tx *bolt.Tx) error {
 		// Retrieve the users bucket
 		// This should be created when the DB is first opened.
-		bucket := tx.Bucket([]byte("users"))
+		bucket := tx.Bucket([]byte("typtopUsers"))
 
 		// Generate ID for the user
 		// This returns an error only if the Tx is closed or not writeable.
@@ -113,12 +111,12 @@ func (userService *UserService) createTypTopUser(user *typtop.TypTopUser) error 
 	})
 }
 
-func (userService *UserService) getTypTopUser(email string) (user *typtop.TypTopUser, err error) {
-	user = &typtop.TypTopUser{}
+func (userService *UserService) getTypTopUser(email string) (user *typtop.User, err error) {
+	user = &typtop.User{}
 	log.Println("getting typtop user for", email)
 
 	err = userService.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("users"))
+		bucket := tx.Bucket([]byte("typtopUsers"))
 
 		if bucket == nil {
 			return errors.New("bucket users not found")
@@ -129,7 +127,7 @@ func (userService *UserService) getTypTopUser(email string) (user *typtop.TypTop
 		// TODO find out what's weird about this
 		if userBytes == nil || len(userBytes) == 0 {
 			// log.Fatal("user bytes null")
-			return errors.New("no user with email " + email + " in bucket users")
+			return errors.New("no user with email " + email + " in bucket typtopUsers")
 		}
 
 		err := json.Unmarshal(userBytes, &user)
@@ -141,12 +139,29 @@ func (userService *UserService) getTypTopUser(email string) (user *typtop.TypTop
 		return nil
 	})
 
-	log.Println("waiting for error")
-
 	if err != nil {
 		log.Println(err.Error())
 		return nil, err
 	}
 
 	return user, nil
+}
+
+func (userService *UserService) updateTypTopUser(user *typtop.User) error {
+	log.Println("updating user for", user.Email)
+
+	return userService.db.Update(func(tx *bolt.Tx) error {
+		// Retrieve the users bucket
+		// This should be created when the DB is first opened.
+		bucket := tx.Bucket([]byte("typtopUsers"))
+
+		// Marshal user data into bytes
+		buf, err := json.Marshal(user)
+		if err != nil {
+			return err
+		}
+
+		// Persist bytes to users bucket
+		return bucket.Put([]byte(user.Email), buf)
+	})
 }

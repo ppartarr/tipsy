@@ -105,11 +105,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				loginHTML := filepath.Join("static", "templates", "/login.html")
 				render(w, loginHTML, form)
 			}
-		} else {
-			homeHTML := filepath.Join("static", "templates", "/home.html")
-			render(w, homeHTML, nil)
+			loginHTML := filepath.Join("static", "templates", "/login.html")
+			render(w, loginHTML, nil)
+			return
 		}
-
+		homeHTML := filepath.Join("static", "templates", "/home.html")
+		render(w, homeHTML, nil)
 		return
 	case "/register":
 		form, err := s.UserService.Register(w, r)
