@@ -28,6 +28,13 @@ func (form *LoginForm) Validate() bool {
 		form.Errors["Login"] = "Username and password incorrect"
 	}
 
+	// validate email
+	log.Println("validating email address")
+	_, err := emailaddress.Parse(form.Email)
+	if err != nil {
+		form.Errors["Login"] = "Username and password incorrect"
+	}
+
 	return len(form.Errors) == 0
 }
 
@@ -46,73 +53,79 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		Email:    r.PostFormValue("email"),
 		Password: r.PostFormValue("password"),
 	}
-
 	if form.Validate() == false {
 		log.Println(form.Errors)
 		return form, errors.New("you must submit a valid form")
 	}
 
-	// get user from email
-	user, err := userService.getUser(r.Form["email"][0])
-	if err != nil {
-		return form, errors.New("could not get user " + r.Form["email"][0] + ": " + err.Error())
-	}
+	if userService.config.Checker.TypTop == nil {
 
-	// validate email
-	log.Println("validating email address")
-	_, err = emailaddress.Parse(r.Form["email"][0])
-	if err != nil {
-		log.Println("user already with email " + r.Form["email"][0] + " is already registered")
-		form.addFormError("Login", "Username and password incorrect")
-		return form, errors.New("you must submit a valid form")
-	}
+		// get user from email
+		user, err := userService.getUser(r.Form["email"][0])
+		if err != nil {
+			log.Println("could not get user " + r.Form["email"][0] + ": " + err.Error())
+			form.Errors["Login"] = "Username and password incorrect"
+			return form, errors.New("you must submit a valid form")
+		}
 
-	// init the checker service
-	checkerService := checkers.NewCheckerService(userService.config.Typos, userService.config.Correctors)
+		// init the checker service
+		checkerService := checkers.NewCheckerService(userService.config.Typos, userService.config.Correctors)
 
-	// use one of always, blacklist, optimal
-	if userService.config.Checker.Always {
-		log.Println("using always checker")
-		// check password
-		if !checkerService.CheckAlways(form.Password, user.PasswordHash) {
+		// use one of always, blacklist, optimal
+		if userService.config.Checker.Always {
+			log.Println("using always checker")
+			// check password
+			if !checkerService.CheckAlways(form.Password, user.PasswordHash) {
 
-			// increment login attempts
-			err = userService.checkLoginAttempts(w, r, user)
-			if err != nil {
-				return form, errors.New("failed to check login attemps")
+				// increment login attempts
+				err = userService.checkLoginAttempts(w, r, user)
+				if err != nil {
+					return form, errors.New("failed to check login attemps")
+				}
+			}
+		} else if userService.config.Checker.Blacklist != nil {
+			log.Println("using blacklist checker")
+			blacklist := checkers.LoadBlacklist(userService.config.Checker.Blacklist.File)
+
+			// if password check fails, increment login attempts
+			if !checkerService.CheckBlacklist(form.Password, user.PasswordHash, blacklist) {
+
+				// increment login attempts
+				err = userService.checkLoginAttempts(w, r, user)
+				if err != nil {
+					return form, errors.New("failed to check login attemps")
+				}
+			}
+		} else if userService.config.Checker.Optimal != nil {
+			log.Println("using optimal checker")
+			frequencyBlacklist := checkers.LoadFrequencyBlackList(userService.config.Checker.Optimal.File)
+
+			// if password check fails, increment login attempts
+			if !checkerService.CheckOptimal(form.Password, user.PasswordHash, frequencyBlacklist, userService.config.Checker.Optimal.QthMostProbablePassword) {
+				// increment login attempts
+				err = userService.checkLoginAttempts(w, r, user)
+				if err != nil {
+					return form, errors.New("failed to check login attemps")
+				}
 			}
 		}
-	} else if userService.config.Checker.Blacklist != nil {
-		log.Println("using blacklist checker")
-		blacklist := checkers.LoadBlacklist(userService.config.Checker.Blacklist.File)
 
-		// if password check fails, increment login attempts
-		if !checkerService.CheckBlacklist(form.Password, user.PasswordHash, blacklist) {
+		log.Println("successfully logged in")
 
-			// increment login attempts
-			err = userService.checkLoginAttempts(w, r, user)
-			if err != nil {
-				return form, errors.New("failed to check login attemps")
-			}
+		// init session
+		_, err = session.SetUserID(w, r, strconv.Itoa(user.ID))
+		if err != nil {
+			return form, errors.New("could not create a session for user " + r.Form["email"][0] + ": " + err.Error())
 		}
-	} else if userService.config.Checker.Optimal != nil {
-		log.Println("using optimal checker")
-		frequencyBlacklist := checkers.LoadFrequencyBlackList(userService.config.Checker.Optimal.File)
 
-		// if password check fails, increment login attempts
-		if !checkerService.CheckOptimal(form.Password, user.PasswordHash, frequencyBlacklist, userService.config.Checker.Optimal.QthMostProbablePassword) {
-			// increment login attempts
-			err = userService.checkLoginAttempts(w, r, user)
-			if err != nil {
-				return form, errors.New("failed to check login attemps")
-			}
-		}
-	} else if userService.config.Checker.TypTop != nil {
+	} else {
 		log.Println("using typtop checker")
 
 		typtopUser, err := userService.getTypTopUser(r.Form["email"][0])
 		if err != nil {
-			return form, errors.New("could not get user " + r.Form["email"][0] + ": " + err.Error())
+			log.Println("could not get typtop user " + r.Form["email"][0] + ": " + err.Error())
+			form.Errors["Login"] = "Username and password incorrect"
+			return form, errors.New("you must submit a valid form")
 		}
 
 		// init the checker service
@@ -132,14 +145,14 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		typtopUser.State = typtopState
 
 		userService.updateTypTopUser(typtopUser)
-	}
 
-	log.Println("successfully logged in")
+		log.Println("successfully logged in")
 
-	// init session
-	_, err = session.SetUserID(w, r, strconv.Itoa(user.ID))
-	if err != nil {
-		return form, errors.New("could not create a session for user " + r.Form["email"][0] + ": " + err.Error())
+		// init session
+		_, err = session.SetUserID(w, r, strconv.Itoa(typtopUser.ID))
+		if err != nil {
+			return form, errors.New("could not create a session for typtop user " + r.Form["email"][0] + ": " + err.Error())
+		}
 	}
 
 	return form, nil
@@ -173,8 +186,4 @@ func (userService *UserService) checkTypTopLoginAttempts(w http.ResponseWriter, 
 	}
 
 	return errors.New("wrong password for user " + r.Form["email"][0])
-}
-
-func (form *LoginForm) addFormError(key string, value string) {
-	form.Errors[key] = value
 }

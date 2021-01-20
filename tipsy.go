@@ -34,8 +34,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println(tipsyConfig.Checker.Always)
-
 	// setup & open bolt database
 	var (
 		sessionDB   bleve.Index

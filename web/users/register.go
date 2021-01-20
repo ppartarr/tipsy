@@ -59,10 +59,6 @@ func (form *RegistrationForm) Validate(blacklistFile string, zxcvbnScore int) bo
 	return len(form.Errors) == 0
 }
 
-func (form *RegistrationForm) addFormError(key string, value string) {
-	form.Errors[key] = value
-}
-
 // Register allows a user to register a new account
 func (userService *UserService) Register(w http.ResponseWriter, r *http.Request) (form *RegistrationForm, err error) {
 	// TODO handle HEAD, PUT, and PATCH separately
@@ -93,7 +89,7 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 		typtopUser, err := userService.getTypTopUser(r.Form["email"][0])
 		if typtopUser != nil {
 			log.Println("typtop user already with email " + r.Form["email"][0] + " is already registered")
-			form.addFormError("Email", "Email already registered")
+			form.Errors["Email"] = "Email already registered"
 			return form, errors.New("you must submit a valid form")
 		}
 
@@ -122,7 +118,7 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 		user, err := userService.getUser(r.Form["email"][0])
 		if user != nil {
 			log.Println("user already with email " + r.Form["email"][0] + " is already registered")
-			form.addFormError("Email", "Email already registered")
+			form.Errors["Email"] = "Email already registered"
 			return form, errors.New("you must submit a valid form")
 		}
 

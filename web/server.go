@@ -104,7 +104,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err.Error() == "you must submit a valid form" {
 				loginHTML := filepath.Join("static", "templates", "/login.html")
 				render(w, loginHTML, form)
+				return
 			}
+			log.Println(err.Error())
 			loginHTML := filepath.Join("static", "templates", "/login.html")
 			render(w, loginHTML, nil)
 			return
@@ -119,6 +121,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err.Error() == "you must submit a valid form" {
 				registerHTML := filepath.Join("static", "templates", "/registration.html")
 				render(w, registerHTML, form)
+				return
 			}
 		} else {
 			homeHTML := filepath.Join("static", "templates", "/home.html")
