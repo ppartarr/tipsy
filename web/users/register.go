@@ -95,7 +95,7 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 
 		// init the checker service
 		log.Println("init checker service")
-		checkerService := typtop.NewCheckerService(userService.config.Checker.TypTop)
+		checkerService := typtop.NewCheckerService(userService.config.Checker.TypTop, userService.config.Typos)
 
 		// register the password for typtop
 		typtopState, privateKey := checkerService.Register(r.Form["password"][0])

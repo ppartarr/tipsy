@@ -1,6 +1,5 @@
 # todo
 
-* implement personalised typo-correcion (read paper on Tuesday)
 * if you are applying 3 checkers and rate-limiting at 10, try getting the 30th q most probable pasword in Blacklist to check if there's a decrease in security compared to the exact checker !
 * check if user already has requested token before creating new one in PasswordReset before storeToken
 * ask Phil about encoding before saving to db - tutorial said json but that feels dodgy

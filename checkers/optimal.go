@@ -90,12 +90,11 @@ func FindProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) floa
 func FindOptimalSubset(ballProbability map[string]float64, cutoff float64, frequencyBlacklist map[string]int) CombinationProbability {
 	log.Println("ball probability: ", ballProbability)
 	log.Println("cutoff: ", cutoff)
-	passwordsInBall := make([]string, len(ballProbability))
 
+	passwordsInBall := make([]string, len(ballProbability))
 	for word := range ballProbability {
 		passwordsInBall = append(passwordsInBall, word)
 	}
-
 	passwordsInBall = DeleteEmpty(passwordsInBall)
 
 	combinations := GenerateCombinations(passwordsInBall)
@@ -164,8 +163,8 @@ func GenerateCombinations(passwordsInBall []string) (combinations [][]string) {
 		intCombinations := combin.Combinations(len(passwordsInBall), i)
 		for _, intCombination := range intCombinations {
 			wordSlice := make([]string, i)
-			for _, value := range intCombination {
-				wordSlice = append(wordSlice, passwordsInBall[value])
+			for index, value := range intCombination {
+				wordSlice[index] = passwordsInBall[value]
 				wordSlice = DeleteEmpty(wordSlice)
 			}
 			combinations = append(combinations, wordSlice)

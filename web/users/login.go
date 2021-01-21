@@ -129,7 +129,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		}
 
 		// init the checker service
-		typtopCheckerService := typtop.NewCheckerService(userService.config.Checker.TypTop)
+		typtopCheckerService := typtop.NewCheckerService(userService.config.Checker.TypTop, userService.config.Typos)
 
 		success, typtopState := typtopCheckerService.Login(typtopUser.State, form.Password, typtopUser.PrivateKey)
 

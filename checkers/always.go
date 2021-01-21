@@ -7,8 +7,6 @@ import (
 
 // CheckAlways checks the password and the passwords in the ball by using the given correctors
 func (checker *CheckerService) CheckAlways(submittedPassword string, registeredPassword string) bool {
-	// TODO make these run in constant time to avoid side-channels
-
 	// check the submitted password first
 	if CheckPasswordHash(submittedPassword, registeredPassword) {
 		return true
@@ -36,17 +34,6 @@ func CheckPasswordHash(password, hash string) bool {
 
 // GetBall is the set of strings obtained by applying correctors to the input password
 func GetBall(password string) []string {
-	var ball []string
-
-	return append(ball,
-		correctors.SwitchCaseAll(password),
-		correctors.SwitchCaseFirstLetter(password),
-		correctors.RemoveLastChar(password),
-	)
-}
-
-// GetBallForN is the union of the ball and the submitted password
-func GetBallForN(password string, numberOfCorrectors int) []string {
 	var ball []string
 
 	return append(ball,

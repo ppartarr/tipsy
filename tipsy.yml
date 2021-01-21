@@ -38,6 +38,7 @@ checker:
     # minimum zxcvbn-go score
     zxcvbn: 3
     typoCache:
+      # always set this to true
       warmUp: true
       length: 10
       # cache type, one of LFU, PLFU, LRU, MFU, Best-t
