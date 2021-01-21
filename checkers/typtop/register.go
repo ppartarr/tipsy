@@ -37,16 +37,16 @@ func (checker *CheckerService) Register(password string) (state *State, privateK
 	// fill wait list with empty string
 	initWaitList(waitList, publicKey)
 
-	// TODO warm up cache
 	// init cache
 	cacheState := checker.initCache(password)
 
 	// encrypt cache state
 	encryptedCacheState := encryptCacheState(publicKey, cacheState)
 
-	// TODO add back in when warming up cache
-	// iterate over the typoIndexPairs
-	// addPasswordsToTypoCache(emptyTypoIndexPairs, privateKey, typoCache)
+	// warm up the cache
+	if checker.config.TypoCache.WarmUp && len(cacheState.TypoIndexPairs) != 0 {
+		addPasswordsToTypoCache(cacheState.TypoIndexPairs, privateKey, typoCache)
+	}
 
 	// get random number between 0 and t
 	gamma, err := rand.Int(rand.Reader, big.NewInt(int64(checker.config.TypoCache.Length)))
