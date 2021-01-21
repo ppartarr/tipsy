@@ -98,7 +98,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 			}
 		} else if userService.config.Checker.Optimal != nil {
 			log.Println("using optimal checker")
-			frequencyBlacklist := checkers.LoadFrequencyBlackList(userService.config.Checker.Optimal.File)
+			frequencyBlacklist := checkers.LoadFrequencyBlacklist(userService.config.Checker.Optimal.File)
 
 			// if password check fails, increment login attempts
 			if !checkerService.CheckOptimal(form.Password, user.PasswordHash, frequencyBlacklist, userService.config.Checker.Optimal.QthMostProbablePassword) {

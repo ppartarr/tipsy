@@ -236,8 +236,8 @@ func CalculateTypoProbability(correctionType string) float64 {
 	return typoFixProbability[correctionType]
 }
 
-// LoadFrequencyBlackList loads a file of frequency + high-probability password e.g. ./data/rockyou-withcount1000.txt
-func LoadFrequencyBlackList(filename string) map[string]int {
+// LoadFrequencyBlacklist loads a file of frequency + high-probability password e.g. ./data/rockyou-withcount1000.txt
+func LoadFrequencyBlacklist(filename string) map[string]int {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
