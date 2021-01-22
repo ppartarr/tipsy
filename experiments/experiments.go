@@ -45,21 +45,23 @@ func main() {
 		priorityQueue       PriorityQueue = make(PriorityQueue, 0)
 		guessList           []string
 		naiveGuessList      []string
-		done                map[string]bool = make(map[string]bool)
+		tdone               map[string]bool = make(map[string]bool)
+		rdone               map[string]bool = make(map[string]bool)
 		passwordFrequencies map[string]int  = fblacklist
 		length              int             = 1
 		// startTime            time.Time      = time.Now().UTC()
-		ballSize             float64 = 3
-		sortedBlacklistSlice         = correctors.ConvertMapToSortedSlice(fblacklist)
-		fblacklistIndex      int     = 0
-		ballWeight           float64 = 0
+		ballSize           float64 = 3
+		sortedAttackerList         = correctors.ConvertMapToSortedSlice(attackerList)
+		fblacklistIndex    int     = 0
+		ballWeight         float64 = 0
 	)
 
 	log.Println("starting loop")
 
 	for len(guessList) < q {
-		registeredPassword := sortedBlacklistSlice[fblacklistIndex].Key
-		log.Println(registeredPassword)
+		// get the next most probable password from the attacker's password list
+		registeredPassword := sortedAttackerList[fblacklistIndex].Key
+
 		if len(registeredPassword) < 6 {
 			fblacklistIndex++
 			continue
@@ -80,15 +82,12 @@ func main() {
 				// add guess to guess list
 				log.Println("Guess", len(guessList), "/", q, "password:", item.value, "weight:", float64(item.weight)/float64(totalFrequencies(fblacklist)))
 				guessList = append(guessList, item.value)
-				done[item.value] = true
+				tdone[item.value] = true
 
-				checkerService := checkers.NewCheckerService(typoFrequencies, topCorrectors)
-
-				// add passwords in ball to done
-				killed := checkerService.GetBlacklistBall(item.value, blacklist)
-				killed = append(killed, item.value)
+				// add password & ball to done
+				killed := unionBallNotDone(item.value, rdone)
 				for _, password := range killed {
-					done[password] = true
+					rdone[password] = true
 				}
 
 				// add all neighbours of this password to the priority queue
@@ -113,9 +112,10 @@ func main() {
 
 				if priorityQueue.Len() > 0 {
 					item = heap.Pop(&priorityQueue).(*Item)
-					// weight = item.weight
+					weight = item.weight
 				}
 			}
+			// TODO add check here
 		}
 
 		// insert neighbours into the priority queue
@@ -128,7 +128,7 @@ func main() {
 				allNeighbours = remove(allNeighbours, neighbour)
 			}
 			// don't add neighbour to priority queue if it's already been tested
-			_, ok := done[neighbour]
+			_, ok := rdone[neighbour]
 			if ok {
 				allNeighbours = remove(allNeighbours, neighbour)
 			}
@@ -136,7 +136,7 @@ func main() {
 
 		// add items to the priority queue
 		for _, neighbour := range allNeighbours {
-			weight := power(neighbour, attackerList, blacklist, done)
+			weight := power(neighbour, attackerList, blacklist, tdone)
 			item := &Item{
 				value:  neighbour,
 				weight: weight,
@@ -155,18 +155,36 @@ func main() {
 
 	log.Println("typo guess list:", guessList)
 	log.Println("normal guess list:", naiveGuessList)
-	// log.Println("attacker model:", atta)
+}
+
+func unionBallNotDone(password string, done map[string]bool) []string {
+	// TODO make get ball configurable according to the checker
+	unionBallNotDone := make([]string, 0)
+	temp := correctors.GetBall(password, topCorrectors)
+	for _, str := range temp {
+		if done[str] != true {
+			unionBallNotDone = append(unionBallNotDone, str)
+		}
+	}
+	if done[password] != true {
+		unionBallNotDone = append(unionBallNotDone, password)
+	}
+	return unionBallNotDone
+}
+
+func unionBall(password string) []string {
+	// TODO make get ball configurable according to the checker
+	ball := correctors.GetBall(password, topCorrectors)
+	return append(ball, password)
 }
 
 func power(password string, attackList map[string]int, blacklist []string, done map[string]bool) int {
 	probability := 0
-	checkerService := checkers.NewCheckerService(typoFrequencies, topCorrectors)
 
 	// add passwords in ball to done
-	ball := checkerService.GetBlacklistBall(password, blacklist)
-	ball = append(ball, password)
+	unionBall := unionBall(password)
 
-	for _, pw := range ball {
+	for _, pw := range unionBall {
 		_, ok := done[pw]
 		if !ok {
 			probability += attackList[pw]
