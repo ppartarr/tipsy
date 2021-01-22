@@ -4,11 +4,9 @@ import (
 	"container/heap"
 	"log"
 	mrand "math/rand"
-	"time"
 
 	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/correctors"
-	"github.com/thoas/go-funk"
 )
 
 // Ball alias
@@ -27,6 +25,8 @@ var typoFrequencies map[string]int = map[string]int{
 	"add1-last": 5,
 }
 
+var topCorrectors = []string{"swc-all", "swc-first", "rm-last"}
+
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?")
 
 func main() {
@@ -34,137 +34,175 @@ func main() {
 	// mrand.Seed(time.Now().UnixNano())
 
 	// sample from password leaks
-	// blacklist := checkers.LoadBlacklist("../data/blacklistRockYou1000.txt")
+	blacklist := checkers.LoadBlacklist("../data/rockyou1000.txt")
 	fblacklist := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt")
+	attackerList := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt")
 
 	// TODO get from args
 	q := 10
 
 	var (
-		priorityQueue        PriorityQueue = make(PriorityQueue, 0)
-		guessList            []string
-		done                 []string
-		passwordFrequencies  map[string]int = fblacklist
-		length               int            = 1
-		startTime            time.Time      = time.Now().UTC()
-		ballSize             float64        = 4
-		sortedBlacklistSlice                = correctors.ConvertMapToSortedSlice(fblacklist)
+		priorityQueue       PriorityQueue = make(PriorityQueue, 0)
+		guessList           []string
+		naiveGuessList      []string
+		done                map[string]bool = make(map[string]bool)
+		passwordFrequencies map[string]int  = fblacklist
+		length              int             = 1
+		// startTime            time.Time      = time.Now().UTC()
+		ballSize             float64 = 3
+		sortedBlacklistSlice         = correctors.ConvertMapToSortedSlice(fblacklist)
+		fblacklistIndex      int     = 0
+		ballWeight           float64 = 0
 	)
 
-	for registeredPassword, frequency := range fblacklist {
-		// TODO don't check for password under 6 chars
+	log.Println("starting loop")
+
+	for len(guessList) < q {
+		registeredPassword := sortedBlacklistSlice[fblacklistIndex].Key
+		log.Println(registeredPassword)
 		if len(registeredPassword) < 6 {
+			fblacklistIndex++
 			continue
 		}
 
-		// TODO make this customisable for typtop
-		// neighbours := applyEdits(registeredPassword)
+		if len(naiveGuessList) < q {
+			naiveGuessList = append(naiveGuessList, registeredPassword)
+		}
 
-		neighbours := correctors.GetBall(registeredPassword, []string{"swc-all", "rm-last", "swc-first"})
+		if ballWeight <= 0 {
+			ballWeight = float64(passwordFrequencies[registeredPassword]) * ballSize
+		}
 
-		// log.Println(priorityQueue.Len())
-
-		// iterate over priorityQueue
-		for priorityQueue.Len() > 0 {
+		if priorityQueue.Len() > 0 {
 			item := heap.Pop(&priorityQueue).(*Item)
-			item.priority = -item.priority
-			// ball := applyEdits(item.value)
-			log.Println("here")
-			log.Println(item)
-			ball := correctors.GetBall(item.value, []string{"swc-all", "rm-last", "swc-first"})
-			// TODO verify that this is what's needed
-			ballFrequencySum := sum(ball, passwordFrequencies)
+			weight := item.weight
+			for weight > int(ballSize)*passwordFrequencies[registeredPassword] && len(guessList) < q {
+				// add guess to guess list
+				log.Println("Guess", len(guessList), "/", q, "password:", item.value, "weight:", float64(item.weight)/float64(totalFrequencies(fblacklist)))
+				guessList = append(guessList, item.value)
+				done[item.value] = true
 
-			if item.priority == ballFrequencySum {
+				checkerService := checkers.NewCheckerService(typoFrequencies, topCorrectors)
 
-				// log.Println("priority:", item.priority)
-				// log.Println("frequency:", frequency)
-				// log.Println("ballsize:", int(ballSize))
-				// log.Println("freq * ballsize:", frequency*int(ballSize))
-
-				if item.priority >= frequency*int(ballSize) {
-					log.Println("Guess ", len(guessList), "/", q, "password: ", item.value, "weight: ", item.priority/totalFrequencies(fblacklist))
-
-					done = append(done, item.value)
-					guessList = append(guessList, item.value)
-					// TODO set frequency of ball to 0
-					// passwordFrequencies[] = 0
-					if len(guessList) >= q {
-						break
-					}
-				} else {
-					priorityQueue.update(item, item.value, -ballFrequencySum)
-					break
+				// add passwords in ball to done
+				killed := checkerService.GetBlacklistBall(item.value, blacklist)
+				killed = append(killed, item.value)
+				for _, password := range killed {
+					done[password] = true
 				}
-			} else {
-				priorityQueue.update(item, item.value, -ballFrequencySum)
+
+				// add all neighbours of this password to the priority queue
+				for _, password := range killed {
+					probability := attackerList[password]
+					neighbours := getNeighbours(password, topCorrectors)
+					neighbours = append(neighbours, password)
+					for _, neighbour := range neighbours {
+						// update neighbour weight in the priority queue
+						neighbourItem := priorityQueue.Find(neighbour)
+						if neighbourItem != nil {
+							priorityQueue.update(neighbourItem, neighbourItem.value, neighbourItem.weight-probability)
+
+							// remove from priority queue if weight <= 0
+							// log.Println("removing from priority q")
+							// if neighbourItem.weight <= 0 {
+							// 	heap.Remove(&priorityQueue, neighbourItem.index)
+							// }
+						}
+					}
+				}
+
+				if priorityQueue.Len() > 0 {
+					item = heap.Pop(&priorityQueue).(*Item)
+					// weight = item.weight
+				}
 			}
 		}
 
-		ballMax := 0.0
-
-		log.Println(neighbours)
+		// insert neighbours into the priority queue
+		neighbours := getNeighbours(registeredPassword, topCorrectors)
+		allNeighbours := neighbours
+		neighbours = append(neighbours, registeredPassword)
 		for _, neighbour := range neighbours {
-			// neighbourBall := applyEdits(neighbour)
-			neighbourBall := correctors.GetBall(registeredPassword, []string{"swc-all", "rm-last", "swc-first"})
-			// log.Println("adding to priority queue")
-			// if priorityQueue.Len() == 0 {
-			// 	// init priority queue
-			// 	priorityQueue[0] = &Item{
-			// 		value:    neighbour,
-			// 		priority: -sum(neighbourBall, passwordFrequencies),
-			// 		index:    0,
-			// 	}
-
-			// 	heap.Init(&priorityQueue)
-			// } else {
-			// 	item := &Item{
-			// 		value:    neighbour,
-			// 		priority: -sum(neighbourBall, passwordFrequencies),
-			// 	}
-			// 	priorityQueue.Push(item)
-			// }
-			item := &Item{
-				value:    neighbour,
-				priority: -sum(neighbourBall, passwordFrequencies),
+			// don't add neighbour if it's already in the priority queue
+			if priorityQueue.Find(neighbour) != nil {
+				allNeighbours = remove(allNeighbours, neighbour)
 			}
-			priorityQueue.Push(item)
-			log.Println("add to priority queue:", item)
-			ballMax = max(ballMax, len(neighbourBall))
+			// don't add neighbour to priority queue if it's already been tested
+			_, ok := done[neighbour]
+			if ok {
+				allNeighbours = remove(allNeighbours, neighbour)
+			}
 		}
-		ballSize = ballSize*0.9 + ballMax*0.1
-		// log.Println("updated ball size to:", ballSize)
 
-		if len(priorityQueue) > length {
-			// print update whenever heap size doubles
-			log.Println(">< (", time.Now().Local().UTC().Sub(startTime), ") heap size: ", len(priorityQueue), " ballsize: ", ballSize)
-			length = len(priorityQueue) * 2
+		// add items to the priority queue
+		for _, neighbour := range allNeighbours {
+			weight := power(neighbour, attackerList, blacklist, done)
+			item := &Item{
+				value:  neighbour,
+				weight: weight,
+			}
+			heap.Push(&priorityQueue, item)
 		}
-		// if index%10 == 0 {
-		// 	log.Println("%t %d",
-		// 		time.Now().Local().UTC().Sub(startTime),
-		// 		index,
-		// 		registeredPassword,
-		// 		frequency)
-		// }
-		if len(guessList) >= q {
-			break
+
+		// print heap size update
+		if priorityQueue.Len() > length {
+			log.Println("Heap size:", priorityQueue.Len())
+			length = priorityQueue.Len() * 2
 		}
+
+		fblacklistIndex++
 	}
 
-	lambdaQ := float64(sumQMostProbablePasswords(sortedBlacklistSlice, q)) / float64(totalFrequencies(fblacklist))
-	guessedPassword := make([]string, 0)
-	for _, guess := range guessList {
-		// for _, edit := range applyEdits(guess) {
-		for _, edit := range correctors.GetBall(guess, []string{"swc-all", "rm-last", "swc-first"}) {
-			guessedPassword = append(guessedPassword, edit)
+	log.Println("typo guess list:", guessList)
+	log.Println("normal guess list:", naiveGuessList)
+	// log.Println("attacker model:", atta)
+}
+
+func power(password string, attackList map[string]int, blacklist []string, done map[string]bool) int {
+	probability := 0
+	checkerService := checkers.NewCheckerService(typoFrequencies, topCorrectors)
+
+	// add passwords in ball to done
+	ball := checkerService.GetBlacklistBall(password, blacklist)
+	ball = append(ball, password)
+
+	for _, pw := range ball {
+		_, ok := done[pw]
+		if !ok {
+			probability += attackList[pw]
 		}
 	}
-	guessedPassword = funk.UniqString(guessedPassword)
+	return probability
+}
 
-	lambdaQFuzzy := float64(sum(guessedPassword, passwordFrequencies)) / float64(totalFrequencies(fblacklist))
-	log.Println("lambdaQ:", lambdaQ, "lambdaQFuzzy: ", lambdaQFuzzy)
-	log.Println(guessList)
+func remove(slice []string, s string) []string {
+	for i, str := range slice {
+		if str == s {
+			return append(slice[:i], slice[i+1:]...)
+		}
+	}
+	return nil
+}
+
+func getNeighbours(password string, bestCorrectors []string) []string {
+	neighbours := make([]string, 0)
+	for _, corrector := range bestCorrectors {
+		edits := correctors.ApplyInverseCorrectionFunction(corrector, password)
+		neighbours = append(neighbours, edits...)
+	}
+	neighbours = checkers.DeleteEmpty(neighbours)
+	return neighbours
+}
+
+// Find takes a slice and looks for an element in it. If found it will
+// return it's key, otherwise it will return -1 and a bool of false.
+func find(slice []string, val string) int {
+	for i, item := range slice {
+		if item == val {
+			return i
+		}
+	}
+	return -1
 }
 
 func max(a float64, b int) float64 {

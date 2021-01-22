@@ -129,6 +129,44 @@ func SwitchShiftLastNCharacters(password string, n int) string {
 	return temp
 }
 
+// InverseRemoveLast appends every rune to the password
+func InverseRemoveLast(password string) []string {
+	edits := make([]string, 1)
+
+	for _, letter := range letterRunes {
+		// add every rune in every index
+		edits = append(edits, password+string(letter))
+	}
+
+	return edits
+}
+
+// InverseRemoveFirst prepends every rune to the password
+func InverseRemoveFirst(password string) []string {
+	edits := make([]string, 1)
+
+	for _, letter := range letterRunes {
+		// add every rune in every index
+		edits = append(edits, string(letter)+password)
+	}
+
+	return edits
+}
+
+// ConvertLastNumberToSymbol converts the last number to a symbol - TODO should depend on keyboard layout
+// s2n-last
+func ConvertLastSymbolToNumber(password string) string {
+	lastCharRune, size := utf8.DecodeLastRuneInString(password)
+	if lastCharRune == utf8.RuneError && (size == 0 || size == 1) {
+		log.Fatal("Unable to decode the size of the last rune")
+		size = 0
+	}
+	if unicode.IsSymbol(lastCharRune) {
+		return password[:len(password)-size] + shiftSwitchMap[string(lastCharRune)]
+	}
+	return password
+}
+
 // AppendOne adds a 1 to the password
 // add1_last
 func AppendOne(password string) string {

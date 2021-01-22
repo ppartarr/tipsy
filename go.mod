@@ -19,6 +19,7 @@ require (
 	github.com/nbutton23/zxcvbn-go v0.0.0-20201221231540-e56b841a3c88
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.7.0
+	github.com/thoas/go-funk v0.7.0 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	go.etcd.io/bbolt v1.3.5
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0

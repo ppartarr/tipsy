@@ -16,7 +16,7 @@ checker:
   # use a blacklist of high-probability passwords. It checks the password or any password in the ball only if it isn't in the blacklist
   # blacklist:
   #   # list of high-probability passwords used as a blacklist
-  #   file: ./data/blacklistRockYou1000.txt
+  #   file: ./data/rockyou1000.txt
   # use a distribution of high-probability passwords (frequency+blacklist) and a distribution of typos to decide whether to correct the typo or not
   # optimal:
   #   # frequency list of high-probability passwords
@@ -50,7 +50,7 @@ checker:
 web:
   register:
     # An optional blacklist used during user registration
-    blacklist: ./data/blacklistRockYou1000.txt
+    blacklist: ./data/rockyou1000.txt
     # required zxcvbn strength out of 4. 0 being lowest and 4 being the highest: https://lowe.github.io/tryzxcvbn/
     zxcvbn: 2
   login:

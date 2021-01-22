@@ -5,6 +5,8 @@ import (
 	"sort"
 )
 
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?")
+
 // ApplyCorrectionFunction applies the appropriate corrector function given it's config name
 func ApplyCorrectionFunction(corrector string, password string) string {
 	// log.Println(corrector)
@@ -35,6 +37,45 @@ func ApplyCorrectionFunction(corrector string, password string) string {
 
 	log.Fatal("corrector unknown")
 	return password
+}
+
+// ApplyInverseCorrectionFunction applies the appropriate corrector function given it's config name
+func ApplyInverseCorrectionFunction(corrector string, password string) []string {
+	// log.Println(corrector)
+	// log.Println(password)
+
+	inverse := make([]string, 1)
+
+	switch corrector {
+	case "swc-all":
+		inverse = append(inverse, SwitchCaseAll(password))
+	case "rm-last":
+		edits := InverseRemoveLast(password)
+		for _, edit := range edits {
+			inverse = append(inverse, edit)
+		}
+	case "swc-first":
+		inverse = append(inverse, SwitchCaseFirstLetter(password))
+	case "rm-first":
+		edits := InverseRemoveFirst(password)
+		for _, edit := range edits {
+			inverse = append(inverse, edit)
+		}
+	case "sws-last1":
+		inverse = append(inverse, SwitchShiftLastCharacter(password))
+	case "sws-lastn":
+		inverse = append(inverse, SwitchShiftLastNCharacters(password, 2))
+	case "upncap":
+		inverse = append(inverse, CapitalToUpper(password))
+	case "n2s-last":
+		inverse = append(inverse, ConvertLastSymbolToNumber(password))
+	case "cap2up":
+		inverse = append(inverse, UpperToCapital(password))
+	case "add1-last":
+		inverse = append(inverse, RemoveLastChar(password))
+	}
+
+	return inverse
 }
 
 // KeyValue reporesents a map as a slice
