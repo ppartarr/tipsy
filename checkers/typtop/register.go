@@ -17,7 +17,7 @@ type State struct {
 }
 
 // Register initialises the user's state
-func (checker *CheckerService) Register(password string) (state *State, privateKey *rsa.PrivateKey) {
+func (checker *Checker) Register(password string) (state *State, privateKey *rsa.PrivateKey) {
 	// generate key
 	privateKey, err := rsa.GenerateKey(rand.Reader, checker.config.PublicKeyEncryption.KeyLength)
 	if err != nil {

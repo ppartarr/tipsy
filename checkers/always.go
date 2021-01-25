@@ -6,9 +6,9 @@ import (
 )
 
 // CheckAlways checks the password and the passwords in the ball by using the given correctors
-func (checker *CheckerService) CheckAlways(submittedPassword string, registeredPassword string) bool {
+func (checker *Checker) CheckAlways(submittedPassword string, registeredPasswordHash string) bool {
 	// check the submitted password first
-	if CheckPasswordHash(submittedPassword, registeredPassword) {
+	if CheckPasswordHash(submittedPassword, registeredPasswordHash) {
 		return true
 	}
 
@@ -18,7 +18,7 @@ func (checker *CheckerService) CheckAlways(submittedPassword string, registeredP
 	// constant-time check of the remainder of the ball
 	success := false
 	for _, value := range ball {
-		if CheckPasswordHash(value, registeredPassword) {
+		if CheckPasswordHash(value, registeredPasswordHash) {
 			success = true
 		}
 	}

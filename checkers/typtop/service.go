@@ -6,15 +6,15 @@ import (
 	"github.com/ppartarr/tipsy/config"
 )
 
-// CheckerService represents a typtop checker service...
-type CheckerService struct {
+// Checker represents a typtop checker service...
+type Checker struct {
 	config        *config.TypTopChecker
 	typoFrequency map[string]int
 }
 
-// NewCheckerService initialises the CheckerService
-func NewCheckerService(typtopConfig *config.TypTopChecker, typoFrequency map[string]int) (checker *CheckerService) {
-	return &CheckerService{
+// NewChecker initialises the Checker
+func NewChecker(typtopConfig *config.TypTopChecker, typoFrequency map[string]int) (checker *Checker) {
+	return &Checker{
 		config:        typtopConfig,
 		typoFrequency: typoFrequency,
 	}

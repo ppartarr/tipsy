@@ -11,7 +11,7 @@ import (
 )
 
 // Login checks if the typtop user's password
-func (checker *CheckerService) Login(state *State, submittedPassword string, privateKey *rsa.PrivateKey) (bool, *State) {
+func (checker *Checker) Login(state *State, submittedPassword string, privateKey *rsa.PrivateKey) (bool, *State) {
 	success := false
 
 	// decrypt typo cache
@@ -83,7 +83,7 @@ func generatePermutations(length int) [][]int {
 // validates that a typo is an acceptable password submission
 // 1. check damereau-levenshtein distance < 2
 // 2. check that the password strength
-func (checker *CheckerService) valid(password string, typo string) bool {
+func (checker *Checker) valid(password string, typo string) bool {
 
 	// TODO make this configurable
 	distance := edlib.DamerauLevenshteinDistance(password, typo)

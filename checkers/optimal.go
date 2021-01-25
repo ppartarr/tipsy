@@ -13,7 +13,7 @@ import (
 )
 
 // CheckOptimal use the given distribution of passwords and a distribution of typos to decide whether to correct the typo or not
-func (checker *CheckerService) CheckOptimal(submittedPassword string, registeredPassword string, frequencyBlacklist map[string]int, q int) bool {
+func (checker *Checker) CheckOptimal(submittedPassword string, registeredPassword string, frequencyBlacklist map[string]int, q int) bool {
 
 	// check the submitted password first
 	if CheckPasswordHash(submittedPassword, registeredPassword) {

@@ -9,7 +9,7 @@ import (
 )
 
 // CheckBlacklist uses a blacklist of high-probability passwords. It checks the password or any password in the ball only if it isn't in the blacklist
-func (checker *CheckerService) CheckBlacklist(submittedPassword string, registeredPassword string, blacklist []string) bool {
+func (checker *Checker) CheckBlacklist(submittedPassword string, registeredPassword string, blacklist []string) bool {
 
 	// check the submitted password first
 	if CheckPasswordHash(submittedPassword, registeredPassword) {
@@ -35,7 +35,7 @@ func (checker *CheckerService) CheckBlacklist(submittedPassword string, register
 }
 
 // GetBlacklistBall returns the ball to check
-func (checker *CheckerService) GetBlacklistBall(submittedPassword string, blacklist []string) []string {
+func (checker *Checker) GetBlacklistBall(submittedPassword string, blacklist []string) []string {
 
 	// get the ball
 	ball := correctors.GetBall(submittedPassword, checker.Correctors)

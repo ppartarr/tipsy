@@ -103,7 +103,7 @@ func generateRandomStringFromRunes(length int) string {
 }
 
 // CacheInit in Chatterjee et al.
-func (checker *CheckerService) initCache(password string) *CacheState {
+func (checker *Checker) initCache(password string) *CacheState {
 	typoCacheFrequency := make([]int, checker.config.TypoCache.Length)
 
 	// TODO implement cache warm up
@@ -139,7 +139,7 @@ func (checker *CheckerService) initCache(password string) *CacheState {
 }
 
 // CacheUpdt in Chatterjee et al.
-func (checker *CheckerService) updateCache(pi []int, cacheState *CacheState, typoIndexPair *TypoIndexPair, waitList [][]byte) *CacheState {
+func (checker *Checker) updateCache(pi []int, cacheState *CacheState, typoIndexPair *TypoIndexPair, waitList [][]byte) *CacheState {
 	// update the frequency of the submitted typo in typo cache
 	if typoIndexPair.index > 0 {
 		cacheState.TypoCacheFrequency[typoIndexPair.index]++
