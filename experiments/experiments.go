@@ -4,9 +4,9 @@ import (
 	"container/heap"
 	"fmt"
 	"log"
-	mrand "math/rand"
 
 	"github.com/ppartarr/tipsy/checkers"
+	"github.com/ppartarr/tipsy/config"
 	"github.com/ppartarr/tipsy/correctors"
 )
 

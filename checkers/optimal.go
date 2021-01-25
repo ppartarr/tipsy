@@ -20,7 +20,7 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 
 	for passwordInBall, correctionType := range ball {
 		// probability of guessing the password in the ball from the blacklist
-		passwordProbability := calculateProbabilityPasswordInBlacklist(passwordInBall, frequencyBlacklist)
+		passwordProbability := passwordProbability(passwordInBall, frequencyBlacklist)
 
 		// probability that the user made the user made the typo associated to the correction e.g. swc-all
 		typoProbability := checker.CalculateTypoProbability(correctionType)
@@ -35,9 +35,9 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 	// find the optimal set of passwords in the ball such that aggregate probability of each password in the ball
 	// is lower than the probability of the qth most probable password in the blacklist
 	probabilityOfQthPassword := findProbabilityOfQthPassword(frequencyBlacklist, q)
-	cutoff := float64(probabilityOfQthPassword) - calculateProbabilityPasswordInBlacklist(submittedPassword, frequencyBlacklist)
+	cutoff := float64(probabilityOfQthPassword) - passwordProbability(submittedPassword, frequencyBlacklist)
 
-	// get the set of password that maximises utility subject to completeness and security
+	// get the set of passwords that maximises utility subject to completeness and security
 	combinationToTry := CombinationProbability{}
 	combinationToTry = FindOptimalSubset(ballProbability, cutoff)
 
@@ -50,6 +50,11 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 
 // FindProbabilityOfQthPassword given the blacklist, find the probability of the qth password in the distribution
 func findProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) float64 {
+
+	if q >= len(frequencyBlacklist) {
+		return 0
+	}
+
 	frequencies := make([]int, len(frequencyBlacklist))
 	totalNumberOfPassword := 0
 
@@ -66,7 +71,7 @@ func findProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) floa
 		}
 	}
 
-	return -1
+	return 0
 }
 
 // FindOptimalSubset given the ball of a password, will solve a simple optimisation problem to find the
@@ -74,9 +79,6 @@ func findProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) floa
 // qth most probable password
 // returns the set with the highest utility
 func FindOptimalSubset(ballProbability map[string]float64, cutoff float64) CombinationProbability {
-	log.Println("ball probability: ", ballProbability)
-	log.Println("cutoff: ", cutoff)
-
 	passwordsInBall := make([]string, len(ballProbability))
 	for word := range ballProbability {
 		passwordsInBall = append(passwordsInBall, word)
@@ -87,22 +89,21 @@ func FindOptimalSubset(ballProbability map[string]float64, cutoff float64) Combi
 	combinationsProbability := []CombinationProbability{}
 
 	// calculate the aggregate probability of each password in a set
-	log.Println(combinations)
 	for _, combination := range combinations {
-		CombinationProbability := CombinationProbability{}
+		combinationProbability := CombinationProbability{}
 		for _, password := range combination {
-			CombinationProbability.addPassword(password)
-			CombinationProbability.addProbability(ballProbability[password])
+			combinationProbability.addPassword(password)
+			combinationProbability.addProbability(ballProbability[password])
 		}
-		combinationsProbability = append(combinationsProbability, CombinationProbability)
+		combinationsProbability = append(combinationsProbability, combinationProbability)
 	}
 
 	// build a new slice with combinations whose probability is smaller or equal to the cutoff
 	filteredCombinations := []CombinationProbability{}
 
-	for _, CombinationProbability := range combinationsProbability {
-		if CombinationProbability.Probability <= cutoff {
-			filteredCombinations = append(filteredCombinations, CombinationProbability)
+	for _, combinationProbability := range combinationsProbability {
+		if combinationProbability.Probability <= cutoff {
+			filteredCombinations = append(filteredCombinations, combinationProbability)
 		}
 	}
 
@@ -134,6 +135,23 @@ func (c *CombinationProbability) addPassword(password string) string {
 	return password
 }
 
+func passwordProbability(password string, frequencies map[string]int) float64 {
+	probability, ok := frequencies[password]
+
+	if ok {
+		return float64(probability) / float64(totalNumberOfPasswords(frequencies))
+	}
+	return 0
+}
+
+func totalNumberOfPasswords(frequencies map[string]int) int {
+	sum := 0
+	for _, frequency := range frequencies {
+		sum += frequency
+	}
+	return sum
+}
+
 func (c *CombinationProbability) addProbability(probability float64) float64 {
 	c.Probability += probability
 	return probability
@@ -156,17 +174,6 @@ func generateCombinations(passwordsInBall []string) (combinations [][]string) {
 		}
 	}
 	return combinations
-}
-
-// CalculateProbabilityPasswordInBlacklist calculate the probability that the password is picked from the frequencyBlacklist
-func calculateProbabilityPasswordInBlacklist(password string, frequencyBlacklist map[string]int) float64 {
-	totalNumberOfPassword := 0
-
-	for _, value := range frequencyBlacklist {
-		totalNumberOfPassword += value
-	}
-
-	return float64(frequencyBlacklist[password]) / float64(totalNumberOfPassword)
 }
 
 // CalculateTypoProbability calculate the probability that a correction is being used using typo frequencies from Chatterjee et al.

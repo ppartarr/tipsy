@@ -72,7 +72,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		if userService.config.Checker.Always {
 			log.Println("using always checker")
 			// check password
-			ball := userService.checker.CheckAlways(form.Password, user.PasswordHash)
+			ball := userService.checker.CheckAlways(form.Password)
 			if !checkPasswordAndBall(form.Password, ball, user.PasswordHash) {
 
 				// increment login attempts
@@ -84,7 +84,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		} else if userService.config.Checker.Blacklist != nil {
 			log.Println("using blacklist checker")
 			blacklist := checkers.LoadBlacklist(userService.config.Checker.Blacklist.File)
-			ball := userService.checker.CheckBlacklist(form.Password, user.PasswordHash, blacklist)
+			ball := userService.checker.CheckBlacklist(form.Password, blacklist)
 
 			// if password check fails, increment login attempts
 			if !checkPasswordAndBall(form.Password, ball, user.PasswordHash) {
@@ -98,7 +98,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		} else if userService.config.Checker.Optimal != nil {
 			log.Println("using optimal checker")
 			frequencyBlacklist := checkers.LoadFrequencyBlacklist(userService.config.Checker.Optimal.File, userService.config.MinPasswordLength)
-			ball := userService.checker.CheckOptimal(form.Password, user.PasswordHash, frequencyBlacklist, userService.config.Checker.Optimal.QthMostProbablePassword)
+			ball := userService.checker.CheckOptimal(form.Password, frequencyBlacklist, userService.config.Checker.Optimal.QthMostProbablePassword)
 
 			// if password check fails, increment login attempts
 			if !checkPasswordAndBall(form.Password, ball, user.PasswordHash) {

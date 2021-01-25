@@ -15,7 +15,7 @@ var testFrequencyBlacklist = map[string]int{
 	"there":           60,
 	"foobar":          50,
 	"duckduckgo":      40,
-	"whatislove":      30,
+	"world":           30,
 	"nomore":          20,
 	"babydon'thurtme": 10,
 }
@@ -48,7 +48,7 @@ func TestCalculateTypoProbability(t *testing.T) {
 }
 
 func TestCalculateProbabilityPasswordInBlacklist(t *testing.T) {
-	prob := calculateProbabilityPasswordInBlacklist("password", testFrequencyBlacklist)
+	prob := passwordProbability("password", testFrequencyBlacklist)
 	if prob != float64(100)/float64(550) {
 		t.Error("calculate typo probability password in blacklist is not working...")
 	}
@@ -80,6 +80,35 @@ func TestMaxProbability(t *testing.T) {
 	}
 }
 
+func TestFindProbabilityOfQthPassword(t *testing.T) {
+	prob := findProbabilityOfQthPassword(testFrequencyBlacklist, 3)
+	fmt.Println(prob)
+	if prob != float64(80)/float64(550) {
+		t.Error("should return the corrector prob")
+	}
+
+	prob = findProbabilityOfQthPassword(testFrequencyBlacklist, 100)
+	if prob != 0 {
+		t.Error("should return -1 if index is out of bounds")
+	}
+}
+
 func TestFindOptimalSubset(t *testing.T) {
-	// TODO
+	ballProbability := map[string]float64{
+		"password": 0.8,
+		"hello":    0.7,
+		"world":    0.65,
+		"foo":      0.1,
+	}
+	comb := FindOptimalSubset(ballProbability, 0.7)
+	fmt.Println("comb1", comb)
+	if !assert.ElementsMatch(t, comb.Passwords, []string{"hello"}) {
+		t.Error("find optimal subset should return the max")
+	}
+
+	comb = FindOptimalSubset(ballProbability, 0.75)
+	fmt.Println("comb2", comb)
+	if !assert.ElementsMatch(t, comb.Passwords, []string{"foo", "world"}) {
+		t.Error("find optimal subset should return the max <= cutoff")
+	}
 }
