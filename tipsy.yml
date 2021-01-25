@@ -47,6 +47,9 @@ checker:
       # should match the rateLimit in practice
       length: 10
 
+# applies to passwords loaded from all lists as well as registration
+minPasswordLength: 6
+
 web:
   register:
     # An optional blacklist used during user registration

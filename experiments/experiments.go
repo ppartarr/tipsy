@@ -30,14 +30,51 @@ var topCorrectors = []string{"swc-all", "swc-first", "rm-last"}
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?")
 
+func testMaxHeap(attackerList map[string]int, blacklist []string, done map[string]bool) {
+	// Some items and their priorities.
+	items := map[string]int{
+		"password": 59462, "iloveyou": 49952, "princess": 33291,
+	}
+
+	// Create a weight queue, put the items in it, and
+	// establish the weight queue (heap) invariants.
+	pq := make(PriorityQueue, len(items))
+	i := 0
+	for value := range items {
+		pq[i] = &Item{
+			value:  value,
+			weight: power(value, attackerList, blacklist, done),
+			index:  i,
+		}
+		log.Println(pq[i])
+		i++
+	}
+	heap.Init(&pq)
+
+	// Insert a new item and then modify its weight.
+	item := &Item{
+		value:  "rockyou",
+		weight: power("rockyou", attackerList, blacklist, done),
+	}
+	pq.Push(item)
+
+	// Take the items out; they arrive in decreasing weight order.
+	for pq.Len() > 0 {
+		item := pq.Pop()
+		fmt.Println(item)
+		// fmt.Printf("%.2f:%s ", item.weight, item.value)
+	}
+
+}
+
 func main() {
 	// seed randomness
 	// mrand.Seed(time.Now().UnixNano())
 
 	// sample from password leaks
 	blacklist := checkers.LoadBlacklist("../data/rockyou1000.txt")
-	fblacklist := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt")
-	attackerList := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt")
+	fblacklist := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt", 6)
+	attackerList := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt", 6)
 
 	// TODO get from args
 	q := 10
@@ -63,7 +100,7 @@ func main() {
 			registeredPassword := sortedAttackerList[fblacklistIndex].Key
 
 			// check that it's longer than 6 chars
-			if len(registeredPassword) < 6 {
+			if len(registeredPassword) < minPasswordLength {
 				fblacklistIndex++
 				continue
 			}

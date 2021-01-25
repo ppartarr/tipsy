@@ -222,7 +222,7 @@ func CalculateTypoProbability(correctionType string) float64 {
 }
 
 // LoadFrequencyBlacklist loads a file of frequency + high-probability password e.g. ./data/rockyou-withcount1000.txt
-func LoadFrequencyBlacklist(filename string) map[string]int {
+func LoadFrequencyBlacklist(filename string, minPasswordLength int) map[string]int {
 	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
@@ -234,14 +234,20 @@ func LoadFrequencyBlacklist(filename string) map[string]int {
 
 	for scanner.Scan() {
 		line := strings.Split(strings.TrimSpace(scanner.Text()), " ")
+		// line := strings.Split(scanner.Text(), " ")
 		// log.Println(line)
 		frequency, err := strconv.Atoi(line[0])
-		word := line[1]
-
 		if err != nil {
 			log.Fatal(err)
 		}
-		data[word] = frequency
+
+		// make sure it's not a whitespace password
+		if len(line) > 1 {
+			word := line[1]
+			if len(word) >= minPasswordLength {
+				data[word] = frequency
+			}
+		}
 	}
 
 	if err := scanner.Err(); err != nil {

@@ -124,8 +124,11 @@ func GetBall(password string, correctors []string) []string {
 	ball := make([]string, len(correctors))
 	for index, corrector := range correctors {
 		correctedPassword := ApplyCorrectionFunction(corrector, password)
-		ball[index] = correctedPassword
+		if correctedPassword != password {
+			ball[index] = correctedPassword
+		}
 	}
+	ball = DeleteEmpty(ball)
 	return ball
 }
 

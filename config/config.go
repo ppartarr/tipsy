@@ -15,9 +15,10 @@ type Server struct {
 
 	Checker *Checker `yaml:"checker"`
 
-	Typos      map[string]int `yaml:"typos"`
-	Correctors []string       `yaml:"correctors"`
-	Web        *Web           `yaml:"web"`
+	Typos             map[string]int `yaml:"typos"`
+	Correctors        []string       `yaml:"correctors"`
+	Web               *Web           `yaml:"web"`
+	MinPasswordLength int            `yaml:"minPasswordLength"`
 }
 
 type Checker struct {
