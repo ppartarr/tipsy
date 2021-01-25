@@ -45,7 +45,7 @@ func (form *RegistrationForm) Validate(blacklistFile string, zxcvbnScore int) bo
 	// check if password is in blacklist
 	blacklist := checkers.LoadBlacklist(blacklistFile)
 	if checkers.StringInSlice(form.Password, blacklist) {
-		form.Errors["Password"] = "Password is too forbidden"
+		form.Errors["Password"] = "Password is forbidden"
 	}
 
 	// only register password if strength estimation is high enough
@@ -95,10 +95,10 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 
 		// init the checker service
 		log.Println("init checker service")
-		checkerService := typtop.NewCheckerService(userService.config.Checker.TypTop, userService.config.Typos)
+		Checker := typtop.NewChecker(userService.config.Checker.TypTop, userService.config.Typos)
 
 		// register the password for typtop
-		typtopState, privateKey := checkerService.Register(r.Form["password"][0])
+		typtopState, privateKey := Checker.Register(r.Form["password"][0])
 
 		// create new user from request then save in db
 		typtopUser = &typtop.User{

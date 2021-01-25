@@ -11,24 +11,28 @@ import (
 
 // Server models the petze.yml main config file
 type Server struct {
-	SMTP *struct {
-		Username string `yaml:"username"`
-		Password string `yaml:"password"`
-		Server   string `yaml:"server"`
-		Port     int    `yaml:"port"`
-		From     string `yaml:"from"`
-	} `yaml:"smtp"`
+	Smtp *SMTP `yaml:"smtp"`
 
-	Checker *struct {
-		Always    bool              `yaml:"always"`
-		Blacklist *BlacklistChecker `yaml:"blacklist"`
-		Optimal   *OptimalChecker   `yaml:"optimal"`
-		TypTop    *TypTopChecker    `yaml:"typtop"`
-	} `yaml:"checker"`
+	Checker *Checker `yaml:"checker"`
 
 	Typos      map[string]int `yaml:"typos"`
 	Correctors []string       `yaml:"correctors"`
 	Web        *Web           `yaml:"web"`
+}
+
+type Checker struct {
+	Always    bool              `yaml:"always"`
+	Blacklist *BlacklistChecker `yaml:"blacklist"`
+	Optimal   *OptimalChecker   `yaml:"optimal"`
+	TypTop    *TypTopChecker    `yaml:"typtop"`
+}
+
+type SMTP struct {
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Server   string `yaml:"server"`
+	Port     int    `yaml:"port"`
+	From     string `yaml:"from"`
 }
 
 // Web is the config for the webserver

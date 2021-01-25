@@ -51,13 +51,13 @@ func main() {
 
 	// init mailer
 	if stat, err := os.Stat(configFile); err == nil && !stat.IsDir() {
-		if tipsyConfig.SMTP != nil {
+		if tipsyConfig.Smtp != nil {
 			mail.InitMailer(
-				tipsyConfig.SMTP.Server,
-				tipsyConfig.SMTP.Username,
-				tipsyConfig.SMTP.Password,
-				tipsyConfig.SMTP.From,
-				tipsyConfig.SMTP.Port,
+				tipsyConfig.Smtp.Server,
+				tipsyConfig.Smtp.Username,
+				tipsyConfig.Smtp.Password,
+				tipsyConfig.Smtp.From,
+				tipsyConfig.Smtp.Port,
 			)
 		}
 	} else {

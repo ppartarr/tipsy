@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ppartarr/tipsy/checkers"
+	"github.com/ppartarr/tipsy/checkers/typtop"
 	"github.com/ppartarr/tipsy/web/session"
 	"github.com/ppartarr/tipsy/web/users"
 )
@@ -39,8 +41,10 @@ var (
 
 // Server handles HTTP traffic from client
 type Server struct {
-	FileHandler *FileServer
-	UserService *users.UserService
+	FileHandler   *FileServer
+	UserService   *users.UserService
+	Checker       *checkers.Checker
+	TypTopChecker *typtop.Checker
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {

@@ -68,14 +68,11 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 			return form, errors.New("you must submit a valid form")
 		}
 
-		// init the checker service
-		checkerService := checkers.NewCheckerService(userService.config.Typos, userService.config.Correctors)
-
 		// use one of always, blacklist, optimal
 		if userService.config.Checker.Always {
 			log.Println("using always checker")
 			// check password
-			if !checkerService.CheckAlways(form.Password, user.PasswordHash) {
+			if !userService.checker.CheckAlways(form.Password, user.PasswordHash) {
 
 				// increment login attempts
 				err = userService.checkLoginAttempts(w, r, user)
@@ -88,7 +85,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 			blacklist := checkers.LoadBlacklist(userService.config.Checker.Blacklist.File)
 
 			// if password check fails, increment login attempts
-			if !checkerService.CheckBlacklist(form.Password, user.PasswordHash, blacklist) {
+			if !userService.checker.CheckBlacklist(form.Password, user.PasswordHash, blacklist) {
 
 				// increment login attempts
 				err = userService.checkLoginAttempts(w, r, user)
@@ -101,7 +98,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 			frequencyBlacklist := checkers.LoadFrequencyBlacklist(userService.config.Checker.Optimal.File)
 
 			// if password check fails, increment login attempts
-			if !checkerService.CheckOptimal(form.Password, user.PasswordHash, frequencyBlacklist, userService.config.Checker.Optimal.QthMostProbablePassword) {
+			if !userService.checker.CheckOptimal(form.Password, user.PasswordHash, frequencyBlacklist, userService.config.Checker.Optimal.QthMostProbablePassword) {
 				// increment login attempts
 				err = userService.checkLoginAttempts(w, r, user)
 				if err != nil {
@@ -128,10 +125,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 			return form, errors.New("you must submit a valid form")
 		}
 
-		// init the checker service
-		typtopCheckerService := typtop.NewCheckerService(userService.config.Checker.TypTop, userService.config.Typos)
-
-		success, typtopState := typtopCheckerService.Login(typtopUser.State, form.Password, typtopUser.PrivateKey)
+		success, typtopState := userService.typtop.Login(typtopUser.State, form.Password, typtopUser.PrivateKey)
 
 		if !success {
 			// increment login attempts

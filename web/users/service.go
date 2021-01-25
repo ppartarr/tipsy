@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/checkers/typtop"
 	"github.com/ppartarr/tipsy/config"
 	bolt "go.etcd.io/bbolt"
@@ -14,8 +15,10 @@ import (
 
 // UserService represents the user service
 type UserService struct {
-	db     *bolt.DB
-	config *config.Server
+	db      *bolt.DB
+	config  *config.Server
+	checker *checkers.Checker
+	typtop  *typtop.Checker
 }
 
 // User represents a user
@@ -59,8 +62,10 @@ func NewUserService(db *bolt.DB, tipsyConfig *config.Server) (userService *UserS
 	})
 
 	return &UserService{
-		db:     db,
-		config: tipsyConfig,
+		db:      db,
+		config:  tipsyConfig,
+		checker: checkers.NewChecker(tipsyConfig.Typos, tipsyConfig.Correctors),
+		typtop:  typtop.NewChecker(tipsyConfig.Checker.TypTop, tipsyConfig.Typos),
 	}
 }
 
