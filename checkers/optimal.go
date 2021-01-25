@@ -81,7 +81,7 @@ func FindOptimalSubset(ballProbability map[string]float64, cutoff float64, frequ
 	for word := range ballProbability {
 		passwordsInBall = append(passwordsInBall, word)
 	}
-	passwordsInBall = DeleteEmpty(passwordsInBall)
+	passwordsInBall = correctors.DeleteEmpty(passwordsInBall)
 
 	combinations := GenerateCombinations(passwordsInBall)
 	combinationsProbability := []CombinationProbability{}
@@ -143,7 +143,7 @@ func (c *CombinationProbability) addProbability(probability float64) float64 {
 // GenerateCombinations given a slice of strings, will generate every combination of that slice
 // e.g. given [a b c] will return [[a] [b] [c] [a b] [a c] [b c] [a b c]]
 func GenerateCombinations(passwordsInBall []string) (combinations [][]string) {
-	passwordsInBall = DeleteEmpty(passwordsInBall)
+	passwordsInBall = correctors.DeleteEmpty(passwordsInBall)
 
 	for i := 1; i <= len(passwordsInBall); i++ {
 		intCombinations := combin.Combinations(len(passwordsInBall), i)
@@ -151,23 +151,12 @@ func GenerateCombinations(passwordsInBall []string) (combinations [][]string) {
 			wordSlice := make([]string, i)
 			for index, value := range intCombination {
 				wordSlice[index] = passwordsInBall[value]
-				wordSlice = DeleteEmpty(wordSlice)
+				wordSlice = correctors.DeleteEmpty(wordSlice)
 			}
 			combinations = append(combinations, wordSlice)
 		}
 	}
 	return combinations
-}
-
-// DeleteEmpty remove all empty strings from a slice
-func DeleteEmpty(s []string) []string {
-	var r []string
-	for _, str := range s {
-		if str != "" {
-			r = append(r, str)
-		}
-	}
-	return r
 }
 
 // CalculateProbabilityPasswordInBlacklist calculate the probability that the password is picked from the frequencyBlacklist

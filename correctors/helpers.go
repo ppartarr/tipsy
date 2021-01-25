@@ -5,8 +5,6 @@ import (
 	"sort"
 )
 
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?")
-
 // ApplyCorrectionFunction applies the appropriate corrector function given it's config name
 func ApplyCorrectionFunction(corrector string, password string) string {
 	// log.Println(corrector)
@@ -138,8 +136,69 @@ func GetBallWithCorrectionType(password string, correctors []string) map[string]
 
 	for _, corrector := range correctors {
 		correctedPassword := ApplyCorrectionFunction(corrector, password)
-		ballWithCorrectorName[correctedPassword] = corrector
+		if correctedPassword != password {
+			ballWithCorrectorName[correctedPassword] = corrector
+		}
 	}
 
 	return ballWithCorrectorName
 }
+
+// DeleteEmpty remove all empty strings from a slice
+func DeleteEmpty(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
+}
+
+// Keyboard layout dependent
+var shiftSwitchMap = map[string]string{
+	"`":  "~",
+	"1":  "!",
+	"2":  "@",
+	"3":  "#",
+	"4":  "$",
+	"5":  "%",
+	"6":  "^",
+	"7":  "&",
+	"8":  "*",
+	"9":  "(",
+	"0":  ")",
+	"-":  "_",
+	"=":  "+",
+	"[":  "{",
+	"]":  "}",
+	"\\": "|",
+	";":  ":",
+	"'":  "\"",
+	",":  "<",
+	".":  ">",
+	"/":  "?",
+	"~":  "`",
+	"!":  "1",
+	"@":  "2",
+	"#":  "3",
+	"$":  "4",
+	"%":  "5",
+	"^":  "6",
+	"&":  "7",
+	"*":  "8",
+	"(":  "9",
+	")":  "0",
+	"_":  "-",
+	"+":  "=",
+	"{":  "[",
+	"}":  "]",
+	"|":  "\\",
+	":":  ";",
+	"\"": "'",
+	"<":  ",",
+	">":  ".",
+	"?":  "/",
+}
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?")
