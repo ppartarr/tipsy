@@ -20,10 +20,10 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 
 	for passwordInBall, correctionType := range ball {
 		// probability of guessing the password in the ball from the blacklist
-		passwordProbability := CalculateProbabilityPasswordInBlacklist(passwordInBall, frequencyBlacklist)
+		passwordProbability := calculateProbabilityPasswordInBlacklist(passwordInBall, frequencyBlacklist)
 
 		// probability that the user made the user made the typo associated to the correction e.g. swc-all
-		typoProbability := CalculateTypoProbability(correctionType)
+		typoProbability := checker.CalculateTypoProbability(correctionType)
 
 		// TODO change this to make probs customisable e.g. ngram vs pcfg vs historgram vs pwmodel
 		// only add password to ball if passwordProbability * typoProbability > 0
@@ -34,22 +34,22 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 
 	// find the optimal set of passwords in the ball such that aggregate probability of each password in the ball
 	// is lower than the probability of the qth most probable password in the blacklist
-	probabilityOfQthPassword := FindProbabilityOfQthPassword(frequencyBlacklist, q)
-	cutoff := float64(probabilityOfQthPassword) - CalculateProbabilityPasswordInBlacklist(submittedPassword, frequencyBlacklist)
+	probabilityOfQthPassword := findProbabilityOfQthPassword(frequencyBlacklist, q)
+	cutoff := float64(probabilityOfQthPassword) - calculateProbabilityPasswordInBlacklist(submittedPassword, frequencyBlacklist)
 
 	// get the set of password that maximises utility subject to completeness and security
 	combinationToTry := CombinationProbability{}
 	combinationToTry = FindOptimalSubset(ballProbability, cutoff, frequencyBlacklist)
 
-	log.Println(combinationToTry)
-	log.Println(probabilityOfQthPassword)
-	log.Println(cutoff)
+	log.Println("combination to try", combinationToTry)
+	log.Println("prob of qth password", probabilityOfQthPassword)
+	log.Println("cutoff", cutoff)
 
 	return combinationToTry.Passwords
 }
 
 // FindProbabilityOfQthPassword given the blacklist, find the probability of the qth password in the distribution
-func FindProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) float64 {
+func findProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) float64 {
 	frequencies := make([]int, len(frequencyBlacklist))
 	totalNumberOfPassword := 0
 
@@ -83,7 +83,7 @@ func FindOptimalSubset(ballProbability map[string]float64, cutoff float64, frequ
 	}
 	passwordsInBall = correctors.DeleteEmpty(passwordsInBall)
 
-	combinations := GenerateCombinations(passwordsInBall)
+	combinations := generateCombinations(passwordsInBall)
 	combinationsProbability := []CombinationProbability{}
 
 	// calculate the aggregate probability of each password in a set
@@ -108,11 +108,11 @@ func FindOptimalSubset(ballProbability map[string]float64, cutoff float64, frequ
 		}
 	}
 
-	return MaxProbability(filteredCombinations)
+	return maxProbability(filteredCombinations)
 }
 
 // MaxProbability given a slice of filteredCombinations, will return the combination with the highest probability
-func MaxProbability(filteredCombinations []CombinationProbability) CombinationProbability {
+func maxProbability(filteredCombinations []CombinationProbability) CombinationProbability {
 
 	maxCombination := CombinationProbability{}
 	maxFloat := 0.0
@@ -143,7 +143,7 @@ func (c *CombinationProbability) addProbability(probability float64) float64 {
 
 // GenerateCombinations given a slice of strings, will generate every combination of that slice
 // e.g. given [a b c] will return [[a] [b] [c] [a b] [a c] [b c] [a b c]]
-func GenerateCombinations(passwordsInBall []string) (combinations [][]string) {
+func generateCombinations(passwordsInBall []string) (combinations [][]string) {
 	passwordsInBall = correctors.DeleteEmpty(passwordsInBall)
 
 	for i := 1; i <= len(passwordsInBall); i++ {
@@ -152,7 +152,7 @@ func GenerateCombinations(passwordsInBall []string) (combinations [][]string) {
 			wordSlice := make([]string, i)
 			for index, value := range intCombination {
 				wordSlice[index] = passwordsInBall[value]
-				wordSlice = correctors.DeleteEmpty(wordSlice)
+				// wordSlice = correctors.DeleteEmpty(wordSlice)
 			}
 			combinations = append(combinations, wordSlice)
 		}
@@ -161,7 +161,7 @@ func GenerateCombinations(passwordsInBall []string) (combinations [][]string) {
 }
 
 // CalculateProbabilityPasswordInBlacklist calculate the probability that the password is picked from the frequencyBlacklist
-func CalculateProbabilityPasswordInBlacklist(password string, frequencyBlacklist map[string]int) float64 {
+func calculateProbabilityPasswordInBlacklist(password string, frequencyBlacklist map[string]int) float64 {
 	totalNumberOfPassword := 0
 
 	for _, value := range frequencyBlacklist {
@@ -172,39 +172,19 @@ func CalculateProbabilityPasswordInBlacklist(password string, frequencyBlacklist
 }
 
 // CalculateTypoProbability calculate the probability that a correction is being used using typo frequencies from Chatterjee et al.
-func CalculateTypoProbability(correctionType string) float64 {
+func (checker *Checker) CalculateTypoProbability(correctionType string) float64 {
 	// number of password fixed by the given corrector in Chatterjee et al.'s study
 	typoFixProbability := make(map[string]float64)
-
-	// init frequencies total = 96963
-	// for every corrector, we give the frequency of typos that were corrected by it in Chatterjee et al's study
-	typoFixFrequency := map[string]int{
-		"same":          90234,
-		"other":         1918,
-		"swc-all":       1698,
-		"kclose":        1385,
-		"keypress-edit": 1000,
-		"rm-last":       382,
-		"swc-first":     209,
-		"rm-firstc":     55,
-		"sws-last1":     19,
-		"tcerror":       18,
-		"sws-lastn":     14,
-		"upncap":        13,
-		"n2s-last":      9,
-		"cap2up":        5,
-		"add1-last":     5,
-	}
 
 	totalNumberOfCorrections := 0
 
 	// calculate the total number of corrections
-	for _, frequency := range typoFixFrequency {
+	for _, frequency := range checker.TypoFrequency {
 		totalNumberOfCorrections += frequency
 	}
 
 	// convert frequency into probability
-	for correction, frequency := range typoFixFrequency {
+	for correction, frequency := range checker.TypoFrequency {
 		typoFixProbability[correction] = float64(frequency) / float64(totalNumberOfCorrections)
 	}
 
@@ -231,6 +211,7 @@ func LoadFrequencyBlacklist(filename string, minPasswordLength int) map[string]i
 			log.Fatal(err)
 		}
 
+		// TODO add support for whitespace passwords
 		// make sure it's not a whitespace password
 		if len(line) > 1 {
 			word := line[1]
