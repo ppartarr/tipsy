@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Server models the petze.yml main config file
+// Server models the tipsy.yml main config file
 type Server struct {
 	Smtp *SMTP `yaml:"smtp"`
 

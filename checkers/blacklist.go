@@ -9,7 +9,7 @@ import (
 )
 
 // CheckBlacklist uses a blacklist of high-probability passwords. It checks the password or any password in the ball only if it isn't in the blacklist
-func (checker *Checker) CheckBlacklist(submittedPassword string, registeredPassword string, blacklist []string) []string {
+func (checker *Checker) CheckBlacklist(submittedPassword string, blacklist []string) []string {
 
 	// get the ball
 	ball := correctors.GetBall(submittedPassword, checker.Correctors)

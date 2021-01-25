@@ -13,7 +13,7 @@ import (
 )
 
 // CheckOptimal use the given distribution of passwords and a distribution of typos to decide whether to correct the typo or not
-func (checker *Checker) CheckOptimal(submittedPassword string, registeredPassword string, frequencyBlacklist map[string]int, q int) []string {
+func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklist map[string]int, q int) []string {
 
 	var ball map[string]string = correctors.GetBallWithCorrectionType(submittedPassword, checker.Correctors)
 	var ballProbability = make(map[string]float64)

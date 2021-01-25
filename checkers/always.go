@@ -5,7 +5,7 @@ import (
 )
 
 // CheckAlways checks the password and the passwords in the ball by using the given correctors
-func (checker *Checker) CheckAlways(submittedPassword string, registeredPasswordHash string) []string {
+func (checker *Checker) CheckAlways(submittedPassword string) []string {
 
 	// get the ball
 	ball := correctors.GetBall(submittedPassword, checker.Correctors)
