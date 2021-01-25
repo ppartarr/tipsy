@@ -83,13 +83,13 @@ func main() {
 		priorityQueue  PriorityQueue = make(PriorityQueue, 0)
 		guessList      []string
 		naiveGuessList []string
-		tdone          map[string]bool = make(map[string]bool)
-		rdone          map[string]bool = make(map[string]bool)
+		done           map[string]bool = make(map[string]bool)
 		length         int             = 1
 		// startTime            time.Time      = time.Now().UTC()
-		ballSize           float64 = 3
+		ballSize           float64 = 5
 		sortedAttackerList         = correctors.ConvertMapToSortedSlice(attackerList)
 		fblacklistIndex    int     = 0
+		minPasswordLength  int     = 6
 	)
 
 	log.Println("starting loop")
@@ -117,18 +117,18 @@ func main() {
 				if item.weight <= 0 {
 					log.Println(item)
 					log.Println(item.weight)
-					log.Fatal("you have exhausted all the options")
+					log.Println("you have exhausted all the options")
+					break
 				}
 				for float64(item.weight) > ballSize*passwordProbability(registeredPassword, attackerList) && len(guessList) < q {
 					// add guess to guess list
 					log.Println("Guess", len(guessList), "/", q, "password:", item.value, "weight:", float64(item.weight)/float64(totalFrequencies(fblacklist)))
 					guessList = append(guessList, item.value)
-					tdone[item.value] = true
 
 					// add password & ball to done
-					killed := unionBallNotDone(item.value, rdone)
+					killed := unionBallNotDone(item.value, done)
 					for _, password := range killed {
-						rdone[password] = true
+						done[password] = true
 					}
 
 					// add all neighbours of this password to the priority queue
@@ -159,24 +159,28 @@ func main() {
 						break
 					}
 				}
-				// TODO add check here
-				_, ok := tdone[item.value]
-				if item.weight > 0 && priorityQueue.Find(item.value) == nil && ok {
+
+				// add item to priority q
+				if item.weight > 0 && priorityQueue.Find(item.value) == nil && !checkers.StringInSlice(item.value, guessList) {
+					log.Println("push item", item)
 					item.weight = -item.weight
+					heap.Push(&priorityQueue, item)
 				}
 			}
 
 			// insert neighbours & password into the priority queue
 			neighbours := getNeighbours(registeredPassword, topCorrectors)
-			allNeighbours := neighbours
 			neighbours = append(neighbours, registeredPassword)
+
+			allNeighbours := neighbours
+
 			for _, neighbour := range neighbours {
 				// don't add neighbour if it's already in the priority queue
 				if priorityQueue.Find(neighbour) != nil {
 					allNeighbours = remove(allNeighbours, neighbour)
 				}
 				// don't add neighbour to priority queue if it's already been tested
-				_, ok := rdone[neighbour]
+				_, ok := done[neighbour]
 				if ok {
 					allNeighbours = remove(allNeighbours, neighbour)
 				}
@@ -184,7 +188,7 @@ func main() {
 
 			// add items to the priority queue
 			for _, neighbour := range allNeighbours {
-				weight := power(neighbour, attackerList, blacklist, tdone)
+				weight := power(neighbour, attackerList, blacklist, done)
 				item := &Item{
 					value:  neighbour,
 					weight: -weight,
@@ -207,16 +211,30 @@ func main() {
 	lambdaQ := ballProbability(naiveGuessList, fblacklist)
 	lambdaQFuzzy := ballProbability(guessList, fblacklist)
 	log.Println("typo guess list:", guessList)
-	log.Println("normal guess list:", naiveGuessList)
+	// log.Println("normal guess list:", naiveGuessList)
 	log.Println("lambda q", lambdaQ)
 	log.Println("lambda q fuzzy", lambdaQFuzzy)
 	log.Println("sec loss", lambdaQFuzzy-lambdaQ)
 }
 
+func printPriorityQueue(pq *PriorityQueue, password string, match string) {
+	if password == match {
+		// print priority queue
+		f := 0
+		for pq.Len() > 0 && f < 100 {
+			item := heap.Pop(pq).(*Item)
+			fmt.Println(item)
+			f++
+		}
+		log.Fatal()
+	}
+}
+
 func passwordProbability(password string, frequencies map[string]int) float64 {
 	probability, ok := frequencies[password]
+
 	if ok {
-		return float64(probability) / float64(len(frequencies))
+		return float64(probability) / float64(totalNumberOfPasswords(frequencies))
 	}
 	return 0
 }
@@ -224,7 +242,7 @@ func passwordProbability(password string, frequencies map[string]int) float64 {
 func ballProbability(ball Ball, frequencies map[string]int) float64 {
 	ballProbability := 0.0
 	for _, password := range ball {
-		ballProbability += checkers.CalculateProbabilityPasswordInBlacklist(password, frequencies)
+		ballProbability += passwordProbability(password, frequencies)
 	}
 	return ballProbability
 }
@@ -242,28 +260,22 @@ func unionBallNotDone(password string, done map[string]bool) []string {
 	if done[password] != true {
 		unionBallNotDone = append(unionBallNotDone, password)
 	}
+
 	return unionBallNotDone
 }
 
-func unionBall(password string) []string {
-	// TODO make get ball configurable according to the checker
-	ball := correctors.GetBall(password, topCorrectors)
-	return append(ball, password)
-}
-
-func power(password string, attackList map[string]int, blacklist []string, done map[string]bool) float64 {
-	probability := 0
+func power(password string, attackerList map[string]int, blacklist []string, done map[string]bool) float64 {
+	probability := 0.0
 
 	// add passwords in ball to done
-	unionBall := unionBall(password)
+	unionBall := unionBallNotDone(password, done)
 
 	for _, pw := range unionBall {
-		_, ok := done[pw]
-		if !ok {
-			probability += attackList[pw]
-		}
+		probability += passwordProbability(pw, attackerList)
 	}
-	return float64(probability)
+	// log.Println(unionBall)
+	// log.Println(probability)
+	return probability
 }
 
 func remove(slice []string, s string) []string {
@@ -281,19 +293,8 @@ func getNeighbours(password string, bestCorrectors []string) []string {
 		edits := correctors.ApplyInverseCorrectionFunction(corrector, password)
 		neighbours = append(neighbours, edits...)
 	}
-	neighbours = checkers.DeleteEmpty(neighbours)
+	neighbours = correctors.DeleteEmpty(neighbours)
 	return neighbours
-}
-
-// Find takes a slice and looks for an element in it. If found it will
-// return it's key, otherwise it will return -1 and a bool of false.
-func find(slice []string, val string) int {
-	for i, item := range slice {
-		if item == val {
-			return i
-		}
-	}
-	return -1
 }
 
 func max(a float64, b int) float64 {
@@ -304,17 +305,7 @@ func max(a float64, b int) float64 {
 	return float64(b)
 }
 
-// sum all frequencies of the passwords in the ball
-func sum(ball Ball, frequencies map[string]int) int {
-	sum := 0
-	for _, password := range ball {
-		sum += frequencies[password]
-	}
-
-	return sum
-}
-
-func totalFrequencies(frequencies map[string]int) int {
+func totalNumberOfPasswords(frequencies map[string]int) int {
 	sum := 0
 	for _, frequency := range frequencies {
 		sum += frequency
@@ -342,19 +333,6 @@ func applyEdits(password string) []string {
 		edits = append(edits, password[:i]+password[i+1:])
 	}
 	return edits
-}
-
-func sumQMostProbablePasswords(blacklist []correctors.KeyValue, q int) int {
-	sum := 0
-	for i := 0; i < q; i++ {
-		// fmt.Println(blacklist[i])
-		if i >= q {
-			return sum
-		}
-		sum += blacklist[i].Value
-	}
-
-	return sum
 }
 
 func getRandomPasswordFromBlacklist(blacklist []string) string {
