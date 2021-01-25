@@ -30,78 +30,42 @@ var topCorrectors = []string{"swc-all", "swc-first", "rm-last"}
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?")
 
-func testMaxHeap(attackerList map[string]int, blacklist []string, done map[string]bool) {
-	// Some items and their priorities.
-	items := map[string]int{
-		"password": 59462, "iloveyou": 49952, "princess": 33291,
-	}
-
-	// Create a weight queue, put the items in it, and
-	// establish the weight queue (heap) invariants.
-	pq := make(PriorityQueue, len(items))
-	i := 0
-	for value := range items {
-		pq[i] = &Item{
-			value:  value,
-			weight: power(value, attackerList, blacklist, done),
-			index:  i,
-		}
-		log.Println(pq[i])
-		i++
-	}
-	heap.Init(&pq)
-
-	// Insert a new item and then modify its weight.
-	item := &Item{
-		value:  "rockyou",
-		weight: power("rockyou", attackerList, blacklist, done),
-	}
-	pq.Push(item)
-
-	// Take the items out; they arrive in decreasing weight order.
-	for pq.Len() > 0 {
-		item := pq.Pop()
-		fmt.Println(item)
-		// fmt.Printf("%.2f:%s ", item.weight, item.value)
-	}
-
+func main() {
+	runExperiment(10, 5, 6)
 }
 
-func main() {
-	// seed randomness
-	// mrand.Seed(time.Now().UnixNano())
+func runExperiment(q int, ballSize int, minPasswordLength int) {
 
 	// sample from password leaks
-	blacklist := checkers.LoadBlacklist("../data/rockyou1000.txt")
-	fblacklist := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt", 6)
-	attackerList := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt", 6)
-
-	// TODO get from args
-	q := 10
+	defenderList := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt", minPasswordLength)
+	attackerList := checkers.LoadFrequencyBlacklist("../data/rockyou-withcount1000.txt", minPasswordLength)
 
 	var (
-		priorityQueue  PriorityQueue = make(PriorityQueue, 0)
-		guessList      []string
-		naiveGuessList []string
-		done           map[string]bool = make(map[string]bool)
-		length         int             = 1
-		// startTime            time.Time      = time.Now().UTC()
-		ballSize           float64 = 5
-		sortedAttackerList         = correctors.ConvertMapToSortedSlice(attackerList)
-		fblacklistIndex    int     = 0
-		minPasswordLength  int     = 6
+		guessList          []string
+		naiveGuessList     []string
+		priorityQueue          = make(PriorityQueue, 0)
+		done                   = make(map[string]bool)
+		length                 = 1
+		sortedAttackerList     = correctors.ConvertMapToSortedSlice(attackerList)
+		defenderListIndex  int = 0
 	)
 
-	log.Println("starting loop")
+	// testMaxHeap(attackerList, blacklist, done)
+	// log.Fatal(0)
+
+	// log.Println("starting loop")
+	// log.Println(power("1234567", attackerList, blacklist, done))
+	// log.Println(power("daniela", attackerList, blacklist, done))
+	// log.Fatal(power("danieln", attackerList, blacklist, done))
 
 	for len(guessList) < q {
 		// get the next most probable password from the attacker's password list
-		if fblacklistIndex < len(sortedAttackerList) {
-			registeredPassword := sortedAttackerList[fblacklistIndex].Key
+		if defenderListIndex < len(sortedAttackerList) {
+			registeredPassword := sortedAttackerList[defenderListIndex].Key
 
 			// check that it's longer than 6 chars
 			if len(registeredPassword) < minPasswordLength {
-				fblacklistIndex++
+				defenderListIndex++
 				continue
 			}
 
@@ -120,9 +84,12 @@ func main() {
 					log.Println("you have exhausted all the options")
 					break
 				}
-				for float64(item.weight) > ballSize*passwordProbability(registeredPassword, attackerList) && len(guessList) < q {
+
+				// printPriorityQueue(&priorityQueue, item.value, "rockyouG")
+
+				for float64(item.weight) > float64(ballSize)*passwordProbability(registeredPassword, attackerList) && len(guessList) < q {
 					// add guess to guess list
-					log.Println("Guess", len(guessList), "/", q, "password:", item.value, "weight:", float64(item.weight)/float64(totalFrequencies(fblacklist)))
+					log.Println("Guess", len(guessList), "/", q, "password:", item.value, "weight:", float64(item.weight))
 					guessList = append(guessList, item.value)
 
 					// add password & ball to done
@@ -130,6 +97,10 @@ func main() {
 					for _, password := range killed {
 						done[password] = true
 					}
+
+					log.Println(item.value)
+					log.Println(killed)
+					log.Println(done)
 
 					// add all neighbours of this password to the priority queue
 					for _, password := range killed {
@@ -145,6 +116,7 @@ func main() {
 								// remove neighbourItem from priorityQueue if it's weight is > 0
 								// log.Println("removing from priority q")
 								if neighbourItem.weight <= 0 {
+									log.Println("removing from priority q:", neighbourItem.value)
 									heap.Remove(&priorityQueue, neighbourItem.index)
 								}
 							}
@@ -156,6 +128,7 @@ func main() {
 						item = heap.Pop(&priorityQueue).(*Item)
 						item.weight = -item.weight
 					} else {
+						log.Println("cannot pop item off of priority q")
 						break
 					}
 				}
@@ -188,7 +161,7 @@ func main() {
 
 			// add items to the priority queue
 			for _, neighbour := range allNeighbours {
-				weight := power(neighbour, attackerList, blacklist, done)
+				weight := power(neighbour, attackerList, done)
 				item := &Item{
 					value:  neighbour,
 					weight: -weight,
@@ -202,16 +175,28 @@ func main() {
 				length = priorityQueue.Len() * 2
 			}
 
-			fblacklistIndex++
+			defenderListIndex++
 		} else {
 			fmt.Println("out of options")
 		}
 	}
 
-	lambdaQ := ballProbability(naiveGuessList, fblacklist)
-	lambdaQFuzzy := ballProbability(guessList, fblacklist)
+	// create guess list ball for lambda q calculation
+	guessListBall := make([]string, len(guessList)*3)
+	for _, password := range guessList {
+		// get ball of passwords in guess list
+		ball := correctors.GetBall(password, topCorrectors)
+
+		guessListBall = append(guessListBall, password)
+		guessListBall = append(guessListBall, ball...)
+	}
+
+	guessListBall = correctors.DeleteEmpty(guessListBall)
+	log.Println(guessListBall)
+	lambdaQFuzzy := ballProbability(guessListBall, defenderList)
+	lambdaQ := ballProbability(naiveGuessList, defenderList)
 	log.Println("typo guess list:", guessList)
-	// log.Println("normal guess list:", naiveGuessList)
+	log.Println("normal guess list:", naiveGuessList)
 	log.Println("lambda q", lambdaQ)
 	log.Println("lambda q fuzzy", lambdaQFuzzy)
 	log.Println("sec loss", lambdaQFuzzy-lambdaQ)
@@ -264,7 +249,7 @@ func unionBallNotDone(password string, done map[string]bool) []string {
 	return unionBallNotDone
 }
 
-func power(password string, attackerList map[string]int, blacklist []string, done map[string]bool) float64 {
+func power(password string, attackerList map[string]int, done map[string]bool) float64 {
 	probability := 0.0
 
 	// add passwords in ball to done
@@ -315,12 +300,6 @@ func totalNumberOfPasswords(frequencies map[string]int) int {
 
 func applyEdits(password string) []string {
 	edits := make([]string, 10)
-
-	// apply all correctors to password & add to edits
-	// ball := correctors.GetBall(password, correctors.GetNBestCorrectors(10, typoFrequencies))
-	// for _, passwordInBall := range ball {
-	// 	edits = append(edits, passwordInBall)
-	// }
 
 	for _, letter := range letterRunes {
 		for i := 0; i < len(password); i++ {

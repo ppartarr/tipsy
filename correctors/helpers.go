@@ -39,9 +39,6 @@ func ApplyCorrectionFunction(corrector string, password string) string {
 
 // ApplyInverseCorrectionFunction applies the appropriate corrector function given it's config name
 func ApplyInverseCorrectionFunction(corrector string, password string) []string {
-	// log.Println(corrector)
-	// log.Println(password)
-
 	inverse := make([]string, 1)
 
 	switch corrector {

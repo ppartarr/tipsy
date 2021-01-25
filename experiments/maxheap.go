@@ -60,36 +60,3 @@ func (pq *PriorityQueue) update(item *Item, value string, weight float64) {
 	item.weight = weight
 	heap.Fix(pq, item.index)
 }
-
-// // Some items and their priorities.
-// items := map[string]int{
-// 	"password": 59462, "iloveyou": 49952, "princess": 33291,
-// }
-
-// // Create a weight queue, put the items in it, and
-// // establish the weight queue (heap) invariants.
-// pq := make(PriorityQueue, len(items))
-// i := 0
-// for value, weight := range items {
-// 	pq[i] = &Item{
-// 		value:    value,
-// 		weight: weight,
-// 		index:    i,
-// 	}
-// 	i++
-// }
-// heap.Init(&pq)
-
-// // Insert a new item and then modify its weight.
-// item := &Item{
-// 	value:    "rockyou",
-// 	weight: 20901,
-// }
-// heap.Push(&pq, item)
-// pq.update(item, item.value, 5)
-
-// // Take the items out; they arrive in decreasing weight order.
-// for pq.Len() > 0 {
-// 	item := heap.Pop(&pq).(*Item)
-// 	fmt.Printf("%.2d:%s ", item.weight, item.value)
-// }
