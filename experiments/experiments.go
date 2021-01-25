@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/heap"
+	"fmt"
 	"log"
 	mrand "math/rand"
 
@@ -42,121 +43,156 @@ func main() {
 	q := 10
 
 	var (
-		priorityQueue       PriorityQueue = make(PriorityQueue, 0)
-		guessList           []string
-		naiveGuessList      []string
-		tdone               map[string]bool = make(map[string]bool)
-		rdone               map[string]bool = make(map[string]bool)
-		passwordFrequencies map[string]int  = fblacklist
-		length              int             = 1
+		priorityQueue  PriorityQueue = make(PriorityQueue, 0)
+		guessList      []string
+		naiveGuessList []string
+		tdone          map[string]bool = make(map[string]bool)
+		rdone          map[string]bool = make(map[string]bool)
+		length         int             = 1
 		// startTime            time.Time      = time.Now().UTC()
 		ballSize           float64 = 3
 		sortedAttackerList         = correctors.ConvertMapToSortedSlice(attackerList)
 		fblacklistIndex    int     = 0
-		ballWeight         float64 = 0
 	)
 
 	log.Println("starting loop")
 
 	for len(guessList) < q {
 		// get the next most probable password from the attacker's password list
-		registeredPassword := sortedAttackerList[fblacklistIndex].Key
+		if fblacklistIndex < len(sortedAttackerList) {
+			registeredPassword := sortedAttackerList[fblacklistIndex].Key
 
-		if len(registeredPassword) < 6 {
-			fblacklistIndex++
-			continue
-		}
+			// check that it's longer than 6 chars
+			if len(registeredPassword) < 6 {
+				fblacklistIndex++
+				continue
+			}
 
-		if len(naiveGuessList) < q {
-			naiveGuessList = append(naiveGuessList, registeredPassword)
-		}
+			// append the guess to the naive guess list
+			if len(naiveGuessList) < q {
+				naiveGuessList = append(naiveGuessList, registeredPassword)
+			}
 
-		if ballWeight <= 0 {
-			ballWeight = float64(passwordFrequencies[registeredPassword]) * ballSize
-		}
-
-		if priorityQueue.Len() > 0 {
-			item := heap.Pop(&priorityQueue).(*Item)
-			weight := item.weight
-			for weight > int(ballSize)*passwordFrequencies[registeredPassword] && len(guessList) < q {
-				// add guess to guess list
-				log.Println("Guess", len(guessList), "/", q, "password:", item.value, "weight:", float64(item.weight)/float64(totalFrequencies(fblacklist)))
-				guessList = append(guessList, item.value)
-				tdone[item.value] = true
-
-				// add password & ball to done
-				killed := unionBallNotDone(item.value, rdone)
-				for _, password := range killed {
-					rdone[password] = true
+			if priorityQueue.Len() > 0 {
+				item := heap.Pop(&priorityQueue).(*Item)
+				// log.Println(item)
+				item.weight = -item.weight
+				if item.weight <= 0 {
+					log.Println(item)
+					log.Println(item.weight)
+					log.Fatal("you have exhausted all the options")
 				}
+				for float64(item.weight) > ballSize*passwordProbability(registeredPassword, attackerList) && len(guessList) < q {
+					// add guess to guess list
+					log.Println("Guess", len(guessList), "/", q, "password:", item.value, "weight:", float64(item.weight)/float64(totalFrequencies(fblacklist)))
+					guessList = append(guessList, item.value)
+					tdone[item.value] = true
 
-				// add all neighbours of this password to the priority queue
-				for _, password := range killed {
-					probability := attackerList[password]
-					neighbours := getNeighbours(password, topCorrectors)
-					neighbours = append(neighbours, password)
-					for _, neighbour := range neighbours {
-						// update neighbour weight in the priority queue
-						neighbourItem := priorityQueue.Find(neighbour)
-						if neighbourItem != nil {
-							priorityQueue.update(neighbourItem, neighbourItem.value, neighbourItem.weight-probability)
+					// add password & ball to done
+					killed := unionBallNotDone(item.value, rdone)
+					for _, password := range killed {
+						rdone[password] = true
+					}
 
-							// remove from priority queue if weight <= 0
-							// log.Println("removing from priority q")
-							// if neighbourItem.weight <= 0 {
-							// 	heap.Remove(&priorityQueue, neighbourItem.index)
-							// }
+					// add all neighbours of this password to the priority queue
+					for _, password := range killed {
+						probability := passwordProbability(registeredPassword, attackerList)
+						neighbours := getNeighbours(password, topCorrectors)
+						neighbours = append(neighbours, password)
+						for _, neighbour := range neighbours {
+							// update neighbour weight in the priority queue
+							neighbourItem := priorityQueue.Find(neighbour)
+							if neighbourItem != nil {
+								priorityQueue.update(neighbourItem, neighbourItem.value, neighbourItem.weight-probability)
+
+								// remove neighbourItem from priorityQueue if it's weight is > 0
+								// log.Println("removing from priority q")
+								if neighbourItem.weight <= 0 {
+									heap.Remove(&priorityQueue, neighbourItem.index)
+								}
+							}
 						}
 					}
+
+					// pop new item off of priority queue
+					if priorityQueue.Len() > 0 {
+						item = heap.Pop(&priorityQueue).(*Item)
+						item.weight = -item.weight
+					} else {
+						break
+					}
 				}
-
-				if priorityQueue.Len() > 0 {
-					item = heap.Pop(&priorityQueue).(*Item)
-					weight = item.weight
+				// TODO add check here
+				_, ok := tdone[item.value]
+				if item.weight > 0 && priorityQueue.Find(item.value) == nil && ok {
+					item.weight = -item.weight
 				}
 			}
-			// TODO add check here
-		}
 
-		// insert neighbours into the priority queue
-		neighbours := getNeighbours(registeredPassword, topCorrectors)
-		allNeighbours := neighbours
-		neighbours = append(neighbours, registeredPassword)
-		for _, neighbour := range neighbours {
-			// don't add neighbour if it's already in the priority queue
-			if priorityQueue.Find(neighbour) != nil {
-				allNeighbours = remove(allNeighbours, neighbour)
+			// insert neighbours & password into the priority queue
+			neighbours := getNeighbours(registeredPassword, topCorrectors)
+			allNeighbours := neighbours
+			neighbours = append(neighbours, registeredPassword)
+			for _, neighbour := range neighbours {
+				// don't add neighbour if it's already in the priority queue
+				if priorityQueue.Find(neighbour) != nil {
+					allNeighbours = remove(allNeighbours, neighbour)
+				}
+				// don't add neighbour to priority queue if it's already been tested
+				_, ok := rdone[neighbour]
+				if ok {
+					allNeighbours = remove(allNeighbours, neighbour)
+				}
 			}
-			// don't add neighbour to priority queue if it's already been tested
-			_, ok := rdone[neighbour]
-			if ok {
-				allNeighbours = remove(allNeighbours, neighbour)
+
+			// add items to the priority queue
+			for _, neighbour := range allNeighbours {
+				weight := power(neighbour, attackerList, blacklist, tdone)
+				item := &Item{
+					value:  neighbour,
+					weight: -weight,
+				}
+				heap.Push(&priorityQueue, item)
 			}
-		}
 
-		// add items to the priority queue
-		for _, neighbour := range allNeighbours {
-			weight := power(neighbour, attackerList, blacklist, tdone)
-			item := &Item{
-				value:  neighbour,
-				weight: weight,
+			// print heap size update
+			if priorityQueue.Len() > length {
+				log.Println("Heap size:", priorityQueue.Len())
+				length = priorityQueue.Len() * 2
 			}
-			heap.Push(&priorityQueue, item)
-		}
 
-		// print heap size update
-		if priorityQueue.Len() > length {
-			log.Println("Heap size:", priorityQueue.Len())
-			length = priorityQueue.Len() * 2
+			fblacklistIndex++
+		} else {
+			fmt.Println("out of options")
 		}
-
-		fblacklistIndex++
 	}
 
+	lambdaQ := ballProbability(naiveGuessList, fblacklist)
+	lambdaQFuzzy := ballProbability(guessList, fblacklist)
 	log.Println("typo guess list:", guessList)
 	log.Println("normal guess list:", naiveGuessList)
+	log.Println("lambda q", lambdaQ)
+	log.Println("lambda q fuzzy", lambdaQFuzzy)
+	log.Println("sec loss", lambdaQFuzzy-lambdaQ)
 }
 
+func passwordProbability(password string, frequencies map[string]int) float64 {
+	probability, ok := frequencies[password]
+	if ok {
+		return float64(probability) / float64(len(frequencies))
+	}
+	return 0
+}
+
+func ballProbability(ball Ball, frequencies map[string]int) float64 {
+	ballProbability := 0.0
+	for _, password := range ball {
+		ballProbability += checkers.CalculateProbabilityPasswordInBlacklist(password, frequencies)
+	}
+	return ballProbability
+}
+
+// returns the union ball of passwords that are not in the done list
 func unionBallNotDone(password string, done map[string]bool) []string {
 	// TODO make get ball configurable according to the checker
 	unionBallNotDone := make([]string, 0)
@@ -178,7 +214,7 @@ func unionBall(password string) []string {
 	return append(ball, password)
 }
 
-func power(password string, attackList map[string]int, blacklist []string, done map[string]bool) int {
+func power(password string, attackList map[string]int, blacklist []string, done map[string]bool) float64 {
 	probability := 0
 
 	// add passwords in ball to done
@@ -190,7 +226,7 @@ func power(password string, attackList map[string]int, blacklist []string, done 
 			probability += attackList[pw]
 		}
 	}
-	return probability
+	return float64(probability)
 }
 
 func remove(slice []string, s string) []string {

@@ -6,8 +6,8 @@ import (
 
 // An Item is something we manage in a weight queue.
 type Item struct {
-	value  string // The value of the item; arbitrary.
-	weight int    // The weight of the item in the queue.
+	value  string  // The value of the item; arbitrary.
+	weight float64 // The weight of the item in the queue.
 	// The index is needed by update and is maintained by the heap.Interface methods.
 	index int // The index of the item in the heap.
 }
@@ -18,8 +18,8 @@ type PriorityQueue []*Item
 func (pq PriorityQueue) Len() int { return len(pq) }
 
 func (pq PriorityQueue) Less(i, j int) bool {
-	// We want Pop to give us the highest, not smallest, weight so we use greater than here.
-	return pq[i].weight > pq[j].weight
+	// We want Pop to give us the smallest, not highest, weight so we use smaller than here.
+	return pq[i].weight < pq[j].weight
 }
 
 func (pq PriorityQueue) Swap(i, j int) {
@@ -55,7 +55,7 @@ func (pq PriorityQueue) Find(value string) *Item {
 }
 
 // update modifies the weight and value of an Item in the queue.
-func (pq *PriorityQueue) update(item *Item, value string, weight int) {
+func (pq *PriorityQueue) update(item *Item, value string, weight float64) {
 	item.value = value
 	item.weight = weight
 	heap.Fix(pq, item.index)
