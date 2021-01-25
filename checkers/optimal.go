@@ -39,7 +39,7 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 
 	// get the set of password that maximises utility subject to completeness and security
 	combinationToTry := CombinationProbability{}
-	combinationToTry = FindOptimalSubset(ballProbability, cutoff, frequencyBlacklist)
+	combinationToTry = FindOptimalSubset(ballProbability, cutoff)
 
 	log.Println("combination to try", combinationToTry)
 	log.Println("prob of qth password", probabilityOfQthPassword)
@@ -73,7 +73,7 @@ func findProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) floa
 // set of password such that the total aggregate probability of the set is lower than that of the
 // qth most probable password
 // returns the set with the highest utility
-func FindOptimalSubset(ballProbability map[string]float64, cutoff float64, frequencyBlacklist map[string]int) CombinationProbability {
+func FindOptimalSubset(ballProbability map[string]float64, cutoff float64) CombinationProbability {
 	log.Println("ball probability: ", ballProbability)
 	log.Println("cutoff: ", cutoff)
 
@@ -91,8 +91,6 @@ func FindOptimalSubset(ballProbability map[string]float64, cutoff float64, frequ
 	for _, combination := range combinations {
 		CombinationProbability := CombinationProbability{}
 		for _, password := range combination {
-			log.Println(password)
-			log.Println(ballProbability[password])
 			CombinationProbability.addPassword(password)
 			CombinationProbability.addProbability(ballProbability[password])
 		}
