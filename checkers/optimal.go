@@ -117,8 +117,9 @@ func MaxProbability(filteredCombinations []CombinationProbability) CombinationPr
 	maxCombination := CombinationProbability{}
 	maxFloat := 0.0
 	for _, filteredCombination := range filteredCombinations {
-		if filteredCombination.Probability != 0 && filteredCombination.Probability > maxFloat {
+		if filteredCombination.Probability != 0.0 && filteredCombination.Probability > maxFloat {
 			maxCombination = filteredCombination
+			maxFloat = filteredCombination.Probability
 		}
 	}
 	return maxCombination
