@@ -72,7 +72,8 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		if userService.config.Checker.Always {
 			log.Println("using always checker")
 			// check password
-			if !userService.checker.CheckAlways(form.Password, user.PasswordHash) {
+			ball := userService.checker.CheckAlways(form.Password, user.PasswordHash)
+			if !checkPasswordAndBall(form.Password, ball, user.PasswordHash) {
 
 				// increment login attempts
 				err = userService.checkLoginAttempts(w, r, user)
@@ -83,9 +84,10 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		} else if userService.config.Checker.Blacklist != nil {
 			log.Println("using blacklist checker")
 			blacklist := checkers.LoadBlacklist(userService.config.Checker.Blacklist.File)
+			ball := userService.checker.CheckBlacklist(form.Password, user.PasswordHash, blacklist)
 
 			// if password check fails, increment login attempts
-			if !userService.checker.CheckBlacklist(form.Password, user.PasswordHash, blacklist) {
+			if !checkPasswordAndBall(form.Password, ball, user.PasswordHash) {
 
 				// increment login attempts
 				err = userService.checkLoginAttempts(w, r, user)
@@ -95,10 +97,11 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 			}
 		} else if userService.config.Checker.Optimal != nil {
 			log.Println("using optimal checker")
-			frequencyBlacklist := checkers.LoadFrequencyBlacklist(userService.config.Checker.Optimal.File)
+			frequencyBlacklist := checkers.LoadFrequencyBlacklist(userService.config.Checker.Optimal.File, userService.config.MinPasswordLength)
+			ball := userService.checker.CheckOptimal(form.Password, user.PasswordHash, frequencyBlacklist, userService.config.Checker.Optimal.QthMostProbablePassword)
 
 			// if password check fails, increment login attempts
-			if !userService.checker.CheckOptimal(form.Password, user.PasswordHash, frequencyBlacklist, userService.config.Checker.Optimal.QthMostProbablePassword) {
+			if !checkPasswordAndBall(form.Password, ball, user.PasswordHash) {
 				// increment login attempts
 				err = userService.checkLoginAttempts(w, r, user)
 				if err != nil {
@@ -150,6 +153,23 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 	}
 
 	return form, nil
+}
+
+// Check the submitted password first, then remainder of the ball
+// this way timing attacks only tell if a corrector is used
+func checkPasswordAndBall(submittedPassword string, ball []string, registeredPasswordHash string) bool {
+	if CheckPasswordHash(submittedPassword, registeredPasswordHash) {
+		return true
+	}
+
+	success := false
+	for _, password := range ball {
+		if CheckPasswordHash(password, registeredPasswordHash) {
+			success = true
+		}
+	}
+
+	return success
 }
 
 func (userService *UserService) checkLoginAttempts(w http.ResponseWriter, r *http.Request, user *User) error {

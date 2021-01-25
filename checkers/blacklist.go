@@ -9,33 +9,7 @@ import (
 )
 
 // CheckBlacklist uses a blacklist of high-probability passwords. It checks the password or any password in the ball only if it isn't in the blacklist
-func (checker *Checker) CheckBlacklist(submittedPassword string, registeredPassword string, blacklist []string) bool {
-
-	// check the submitted password first
-	if CheckPasswordHash(submittedPassword, registeredPassword) {
-		return true
-	}
-
-	// get the ball
-	ball := correctors.GetBall(submittedPassword, checker.Correctors)
-
-	// constant-time check of the remainder of the ball
-	succcess := false
-	for _, value := range ball {
-		log.Println(value)
-		// check password in the ball only if it isn't in the blacklist
-		if !StringInSlice(value, blacklist) {
-			if CheckPasswordHash(value, registeredPassword) {
-				succcess = true
-			}
-		}
-	}
-
-	return succcess
-}
-
-// GetBlacklistBall returns the ball to check
-func (checker *Checker) GetBlacklistBall(submittedPassword string, blacklist []string) []string {
+func (checker *Checker) CheckBlacklist(submittedPassword string, registeredPassword string, blacklist []string) []string {
 
 	// get the ball
 	ball := correctors.GetBall(submittedPassword, checker.Correctors)

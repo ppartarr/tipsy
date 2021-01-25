@@ -13,12 +13,7 @@ import (
 )
 
 // CheckOptimal use the given distribution of passwords and a distribution of typos to decide whether to correct the typo or not
-func (checker *Checker) CheckOptimal(submittedPassword string, registeredPassword string, frequencyBlacklist map[string]int, q int) bool {
-
-	// check the submitted password first
-	if CheckPasswordHash(submittedPassword, registeredPassword) {
-		return true
-	}
+func (checker *Checker) CheckOptimal(submittedPassword string, registeredPassword string, frequencyBlacklist map[string]int, q int) []string {
 
 	var ball map[string]string = correctors.GetBallWithCorrectionType(submittedPassword, checker.Correctors)
 	var ballProbability = make(map[string]float64)
@@ -50,16 +45,7 @@ func (checker *Checker) CheckOptimal(submittedPassword string, registeredPasswor
 	log.Println(probabilityOfQthPassword)
 	log.Println(cutoff)
 
-	// constant-time check of the remainder of the ball
-	success := false
-	for _, passwordsInCombination := range combinationToTry.Passwords {
-		// log.Println(password)
-		if CheckPasswordHash(passwordsInCombination, registeredPassword) {
-			success = true
-		}
-	}
-
-	return success
+	return combinationToTry.Passwords
 }
 
 // FindProbabilityOfQthPassword given the blacklist, find the probability of the qth password in the distribution
