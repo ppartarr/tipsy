@@ -86,9 +86,9 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 		log.Println("running typtop mode")
 
 		// check that email isn't already registered
-		typtopUser, err := userService.getTypTopUser(r.Form["email"][0])
+		typtopUser, err := userService.getTypTopUser(form.Email)
 		if typtopUser != nil {
-			log.Println("typtop user already with email " + r.Form["email"][0] + " is already registered")
+			log.Println("typtop user already with email " + form.Email + " is already registered")
 			form.Errors["Email"] = "Email already registered"
 			return form, errors.New("you must submit a valid form")
 		}
@@ -98,11 +98,11 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 		Checker := typtop.NewChecker(userService.config.Checker.TypTop, userService.config.Typos)
 
 		// register the password for typtop
-		typtopState, privateKey := Checker.Register(r.Form["password"][0])
+		typtopState, privateKey := Checker.Register(form.Password)
 
 		// create new user from request then save in db
 		typtopUser = &typtop.User{
-			Email:         r.Form["email"][0],
+			Email:         form.Email,
 			LoginAttempts: 0,
 			State:         typtopState,
 			PrivateKey:    privateKey,
@@ -115,21 +115,21 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 	} else {
 
 		// check that email isn't already registered
-		user, err := userService.getUser(r.Form["email"][0])
+		user, err := userService.getUser(form.Email)
 		if user != nil {
-			log.Println("user already with email " + r.Form["email"][0] + " is already registered")
+			log.Println("user already with email " + form.Email + " is already registered")
 			form.Errors["Email"] = "Email already registered"
 			return form, errors.New("you must submit a valid form")
 		}
 
-		passwordHash, err := HashPassword(r.Form["password"][0])
+		passwordHash, err := HashPassword(form.Password)
 		if err != nil {
 			return nil, errors.New("couldn't hash password: " + err.Error())
 		}
 
 		// create new user from request then save in db
 		user = &User{
-			Email:         r.Form["email"][0],
+			Email:         form.Email,
 			PasswordHash:  passwordHash,
 			LoginAttempts: 0,
 		}

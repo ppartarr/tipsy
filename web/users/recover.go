@@ -10,20 +10,44 @@ import (
 	"github.com/ppartarr/tipsy/mail"
 )
 
+// RecoveryForm is a recovery form
+type RecoveryForm struct {
+	Email  string
+	Errors map[string]string
+}
+
+// Validate checks that the fields in the login form are set
+func (form *RecoveryForm) Validate() bool {
+	form.Errors = make(map[string]string)
+
+	// check that username is an email address
+	match := rxEmail.Match([]byte(form.Email))
+	if match == false {
+		form.Errors["Email"] = "Email must be valid"
+	}
+
+	return len(form.Errors) == 0
+}
+
 // PasswordRecovery sends the user an email containing a password reset link
-func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.Request) error {
+func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.Request) (form *RecoveryForm, err error) {
 	// check that a valid form was submitted
 	r.ParseForm()
 	log.Println(r.Form)
-	expectedValues := []string{"email"}
-	if !formIsValid(r.Form, expectedValues) {
-		return errors.New("you must submit a valid form")
+	form = &RecoveryForm{
+		Email: r.PostFormValue("email"),
+	}
+	if form.Validate() == false {
+		log.Println(form.Errors)
+		return form, errors.New("you must submit a valid form")
 	}
 
 	// get user from db using submitted email
-	user, err := userService.getUser(r.Form["email"][0])
+	user, err := userService.getUser(form.Email)
 	if err != nil {
-		return errors.New("could not get user" + r.Form["email"][0] + ": " + err.Error())
+		log.Println("could not get user" + form.Email + ": " + err.Error())
+		form.Errors["Email"] = "Email does not exist"
+		return form, errors.New("you must submit a valid form")
 	}
 
 	log.Println("there")
@@ -32,7 +56,7 @@ func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.
 	log.Println(userService.config.Web.Reset.TokenValidity * time.Minute)
 
 	token := &Token{
-		Email:     r.Form["email"][0],
+		Email:     form.Email,
 		TTL:       userService.config.Web.Reset.TokenValidity,
 		CreatedAt: time.Now().Local(),
 	}
@@ -44,7 +68,7 @@ func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.
 	log.Println(token)
 	err = userService.storeToken(token)
 	if err != nil {
-		return errors.New("could not store token for user " + r.Form["email"][0] + ": " + err.Error())
+		return nil, errors.New("could not store token for user " + form.Email + ": " + err.Error())
 	}
 
 	// send password reset mail
@@ -55,7 +79,7 @@ func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.
 		mail.Send(user.Email, "Tipsy password reset", mail.GeneratePasswordResetMail(url))
 	}()
 
-	return nil
+	return nil, nil
 }
 
 // checks that the form isn't empty...

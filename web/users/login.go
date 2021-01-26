@@ -61,9 +61,9 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 	if userService.config.Checker.TypTop == nil {
 
 		// get user from email
-		user, err := userService.getUser(r.Form["email"][0])
+		user, err := userService.getUser(form.Email)
 		if err != nil {
-			log.Println("could not get user " + r.Form["email"][0] + ": " + err.Error())
+			log.Println("could not get user " + form.Email + ": " + err.Error())
 			form.Errors["Login"] = "Username and password incorrect"
 			return form, errors.New("you must submit a valid form")
 		}
@@ -115,15 +115,15 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		// init session
 		_, err = session.SetUserID(w, r, strconv.Itoa(user.ID))
 		if err != nil {
-			return form, errors.New("could not create a session for user " + r.Form["email"][0] + ": " + err.Error())
+			return form, errors.New("could not create a session for user " + form.Email + ": " + err.Error())
 		}
 
 	} else {
 		log.Println("using typtop checker")
 
-		typtopUser, err := userService.getTypTopUser(r.Form["email"][0])
+		typtopUser, err := userService.getTypTopUser(form.Email)
 		if err != nil {
-			log.Println("could not get typtop user " + r.Form["email"][0] + ": " + err.Error())
+			log.Println("could not get typtop user " + form.Email + ": " + err.Error())
 			form.Errors["Login"] = "Username and password incorrect"
 			return form, errors.New("you must submit a valid form")
 		}
@@ -148,7 +148,7 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 		// init session
 		_, err = session.SetUserID(w, r, strconv.Itoa(typtopUser.ID))
 		if err != nil {
-			return form, errors.New("could not create a session for typtop user " + r.Form["email"][0] + ": " + err.Error())
+			return form, errors.New("could not create a session for typtop user " + form.Email + ": " + err.Error())
 		}
 	}
 
