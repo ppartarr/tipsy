@@ -127,12 +127,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				render(w, registerHTML, form)
 				return
 			}
-		} else {
-			homeHTML := filepath.Join("static", "templates", "/home.html")
-			render(w, homeHTML, nil)
 		}
-
-		// http.Redirect(w, r, "/login.html", 301)
+		homeHTML := filepath.Join("static", "templates", "/home.html")
+		render(w, homeHTML, nil)
 		return
 	case "/logout":
 		err := s.UserService.Logout(w, r)
@@ -143,17 +140,27 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		render(w, loginHTML, nil)
 		return
 	case "/recover":
-		err := s.UserService.PasswordRecovery(w, r)
+		form, err := s.UserService.PasswordRecovery(w, r)
 		if err != nil {
 			log.Println(err.Error())
+			if err.Error() == "you must submit a valid form" {
+				recoverHTML := filepath.Join("static", "templates", "/recover.html")
+				render(w, recoverHTML, form)
+				return
+			}
 		}
 		resetHTML := filepath.Join("static", "templates", "/reset.html")
 		render(w, resetHTML, nil)
 		return
 	case "/reset":
-		err := s.UserService.PasswordReset(w, r)
+		form, err := s.UserService.PasswordReset(w, r)
 		if err != nil {
 			log.Println(err.Error())
+			if err.Error() == "you must submit a valid form" {
+				resetHTML := filepath.Join("static", "templates", "/reset.html")
+				render(w, resetHTML, form)
+				return
+			}
 		}
 		loginHTML := filepath.Join("static", "templates", "/login.html")
 		render(w, loginHTML, nil)
