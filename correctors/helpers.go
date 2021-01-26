@@ -87,15 +87,19 @@ func GetNBestCorrectors(n int, typoFrequency map[string]int) []string {
 		log.Fatal("there are only 10 correctors")
 	}
 
-	nBestCorrectors := make([]string, n)
+	nBestCorrectors := make([]string, 0)
 
 	ss := ConvertMapToSortedSlice(typoFrequency)
 
 	// add corrector to slice
-	for i := 0; i < n; i++ {
-		nBestCorrectors[i] = ss[i].Key
+	for i := 0; i < len(typoFrequency); i++ {
+		// some typos aren't correction functions e.g. keypress-edit, tcerror, other
+		if StringInSlice(ss[i].Key, allCorrectors) && len(nBestCorrectors) < n {
+			nBestCorrectors = append(nBestCorrectors, ss[i].Key)
+		}
 	}
 
+	nBestCorrectors = DeleteEmpty(nBestCorrectors)
 	return nBestCorrectors
 }
 
