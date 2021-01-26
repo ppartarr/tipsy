@@ -16,7 +16,7 @@ func (checker *Checker) CheckBlacklist(submittedPassword string, blacklist []str
 
 	for _, password := range ball {
 		// check password in the ball only if it isn't in the blacklist
-		if StringInSlice(password, blacklist) {
+		if correctors.StringInSlice(password, blacklist) {
 			ball = remove(ball, password)
 		}
 	}

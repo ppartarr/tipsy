@@ -11,6 +11,7 @@ import (
 	"github.com/nbutton23/zxcvbn-go"
 	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/checkers/typtop"
+	"github.com/ppartarr/tipsy/correctors"
 )
 
 // RegistrationForm represents a login form
@@ -44,7 +45,7 @@ func (form *RegistrationForm) Validate(blacklistFile string, zxcvbnScore int) bo
 
 	// check if password is in blacklist
 	blacklist := checkers.LoadBlacklist(blacklistFile)
-	if checkers.StringInSlice(form.Password, blacklist) {
+	if correctors.StringInSlice(form.Password, blacklist) {
 		form.Errors["Password"] = "Password is forbidden"
 	}
 

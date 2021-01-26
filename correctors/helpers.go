@@ -152,6 +152,30 @@ func DeleteEmpty(s []string) []string {
 	return r
 }
 
+// StringInSlice returns true if s in is list
+func StringInSlice(s string, list []string) bool {
+	success := false
+	for _, value := range list {
+		if value == s {
+			success = true
+		}
+	}
+	return success
+}
+
+var allCorrectors = []string{
+	"swc-all",
+	"rm-last",
+	"swc-first",
+	"rm-first",
+	"sws-last1",
+	"sws-lastn",
+	"upncap",
+	"n2s-last",
+	"cap2up",
+	"add1-last",
+}
+
 // Keyboard layout dependent
 var shiftSwitchMap = map[string]string{
 	"`":  "~",

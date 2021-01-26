@@ -12,14 +12,3 @@ func (checker *Checker) CheckAlways(submittedPassword string) []string {
 
 	return ball
 }
-
-// StringInSlice returns true if s in is list
-func StringInSlice(s string, list []string) bool {
-	success := false
-	for _, value := range list {
-		if value == s {
-			success = true
-		}
-	}
-	return success
-}

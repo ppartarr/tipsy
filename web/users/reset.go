@@ -10,6 +10,7 @@ import (
 
 	"github.com/nbutton23/zxcvbn-go"
 	"github.com/ppartarr/tipsy/checkers"
+	"github.com/ppartarr/tipsy/correctors"
 )
 
 // ResetForm represents a reset form
@@ -52,7 +53,7 @@ func (form *ResetForm) Validate(blacklistFile string, zxcvbnScore int, token *To
 
 	// check if password is in blacklist
 	blacklist := checkers.LoadBlacklist(blacklistFile)
-	if checkers.StringInSlice(form.Password, blacklist) {
+	if correctors.StringInSlice(form.Password, blacklist) {
 		form.Errors["Password"] = "Password is forbidden"
 	}
 
