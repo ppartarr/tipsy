@@ -33,7 +33,7 @@ func ApplyCorrectionFunction(corrector string, password string) string {
 		return AppendOne(password)
 	}
 
-	log.Fatal("corrector unknown")
+	log.Fatal("corrector unknown:", corrector)
 	return password
 }
 

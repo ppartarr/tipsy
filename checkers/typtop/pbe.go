@@ -27,7 +27,7 @@ func decodeKey(pemBytes []byte) (key *rsa.PrivateKey) {
 	if block == nil {
 		log.Println("failed to decode from pem")
 	}
-	log.Println(len(block.Bytes))
+	// log.Println(len(block.Bytes))
 	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		log.Println("failed to decode from PKCS1")
@@ -83,7 +83,7 @@ func aesEncrypt(password string, message []byte) []byte {
 	return gcm.Seal(initialisationVector, initialisationVector, []byte(message), nil)
 }
 
-func aesDecrypt(password string, ciphertext []byte) []byte {
+func aesDecrypt(password string, ciphertext []byte) ([]byte, error) {
 	// TODO generate different salt for every user & store
 	salt := []byte("salt")
 
@@ -104,10 +104,5 @@ func aesDecrypt(password string, ciphertext []byte) []byte {
 	// init the initialisation vector
 	initialisationVector, ciphertext := ciphertext[:gcm.NonceSize()], ciphertext[gcm.NonceSize():]
 
-	plaintext, err := gcm.Open(nil, initialisationVector, ciphertext, nil)
-	if err != nil {
-		log.Println("couldn't decrypt ciphertext")
-	}
-
-	return plaintext
+	return gcm.Open(nil, initialisationVector, ciphertext, nil)
 }

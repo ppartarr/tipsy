@@ -52,17 +52,17 @@ func decryptCacheState(privateKey *rsa.PrivateKey, encryptedCacheState []byte) *
 }
 
 func addPasswordsToTypoCache(pairs []TypoIndexPair, privateKey *rsa.PrivateKey, typoCache [][]byte) [][]byte {
+	encodedPrivateKey := encodeKey(privateKey)
 	for _, pair := range pairs {
-		// encode private key
-		encodedPrivateKey := encodeKey(privateKey)
+		fmt.Println("adding password to typo cache: ", pair)
 		typoCache[pair.index] = aesEncrypt(pair.typo, encodedPrivateKey)
 	}
 	return typoCache
 }
 
-func initTypoCache(typoCache [][]byte, publicKey *rsa.PublicKey) [][]byte {
-	log.Println("init typo cache")
-	log.Println(len(typoCache))
+func initTypoCache(typoCache [][]byte, privateKey *rsa.PrivateKey) [][]byte {
+	encodedPrivateKey := encodeKey(privateKey)
+
 	for i := 1; i < len(typoCache); i++ {
 		// length between 10 and 26
 		length, err := rand.Int(rand.Reader, big.NewInt(16))
@@ -77,10 +77,7 @@ func initTypoCache(typoCache [][]byte, publicKey *rsa.PublicKey) [][]byte {
 		log.Println(ciphertext)
 
 		// store in typo cache
-		encryptedCiphertext, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey, []byte(ciphertext), nil)
-		if err != nil {
-			log.Fatal("failed encrypt the typo ciphertext in the typo cache")
-		}
+		encryptedCiphertext := aesEncrypt(ciphertext, encodedPrivateKey)
 		typoCache[i] = encryptedCiphertext
 	}
 
@@ -112,7 +109,7 @@ func (checker *Checker) initCache(password string) *CacheState {
 	}
 
 	// create typo based on correctors
-	typoIndexPairs := make([]TypoIndexPair, checker.config.TypoCache.Length)
+	typoIndexPairs := make([]TypoIndexPair, 0)
 
 	if checker.config.TypoCache.WarmUp {
 		corrections := correctors.GetNBestCorrectors(checker.config.TypoCache.Length, checker.typoFrequency)

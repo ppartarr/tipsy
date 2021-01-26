@@ -16,10 +16,10 @@ func (checker *Checker) Login(state *State, submittedPassword string, privateKey
 
 	// decrypt typo cache
 	for i := 0; i < len(state.TypoCache); i++ {
-		encodedPrivateKey := aesDecrypt(submittedPassword, state.TypoCache[i])
+		encodedPrivateKey, err := aesDecrypt(submittedPassword, state.TypoCache[i])
 
 		// if the decoded & decrypted private key matches
-		if privateKey.Equal(decodeKey(encodedPrivateKey)) {
+		if err == nil && privateKey.Equal(decodeKey(encodedPrivateKey)) {
 			log.Println("private keys match!")
 			success = true
 
@@ -28,9 +28,12 @@ func (checker *Checker) Login(state *State, submittedPassword string, privateKey
 			pi := permutations[mrand.Intn(len(permutations))]
 
 			// decrypt ciphered cache state
+			log.Println("decrypting cache state")
 			cacheState := decryptCacheState(privateKey, state.CipheredCacheState)
+			log.Println("cache state")
 
 			// decrypt typos from the wait list
+			log.Println("decrypting wait list")
 			typos := decryptWaitList(privateKey, state.WaitList)
 			log.Println("wait list: ", typos)
 
@@ -53,6 +56,7 @@ func (checker *Checker) Login(state *State, submittedPassword string, privateKey
 			}
 
 			// clear the wait list (same as init)
+			log.Println("clear the wait list")
 			initWaitList(state.WaitList, &privateKey.PublicKey)
 
 			// update state

@@ -32,20 +32,25 @@ func (checker *Checker) Register(password string) (state *State, privateKey *rsa
 	typoCache[0] = aesEncrypt(password, encodeKey(privateKey))
 
 	// fill typo cache with random ciphertext
-	initTypoCache(typoCache, publicKey)
+	log.Println("init the typo cache")
+	typoCache = initTypoCache(typoCache, privateKey)
 
 	// fill wait list with empty string
-	initWaitList(waitList, publicKey)
+	log.Println("init the wait list")
+	waitList = initWaitList(waitList, publicKey)
 
 	// init cache
+	log.Println("init the cache state")
 	cacheState := checker.initCache(password)
 
 	// encrypt cache state
+	log.Println("encrypt cache state")
 	encryptedCacheState := encryptCacheState(publicKey, cacheState)
 
 	// warm up the cache
+	log.Println("warm up typo cache")
 	if checker.config.TypoCache.WarmUp && len(cacheState.TypoIndexPairs) != 0 {
-		addPasswordsToTypoCache(cacheState.TypoIndexPairs, privateKey, typoCache)
+		typoCache = addPasswordsToTypoCache(cacheState.TypoIndexPairs, privateKey, typoCache)
 	}
 
 	// get random number between 0 and t
