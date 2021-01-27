@@ -20,22 +20,22 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 
 	for passwordInBall, correctionType := range ball {
 		// probability of guessing the password in the ball from the blacklist
-		passwordProbability := passwordProbability(passwordInBall, frequencyBlacklist)
+		PasswordProbability := PasswordProbability(passwordInBall, frequencyBlacklist)
 
 		// probability that the user made the user made the typo associated to the correction e.g. swc-all
 		typoProbability := checker.CalculateTypoProbability(correctionType)
 
 		// TODO change this to make probs customisable e.g. ngram vs pcfg vs historgram vs pwmodel
-		// only add password to ball if passwordProbability * typoProbability > 0
-		if passwordProbability*typoProbability > 0 {
-			ballProbability[passwordInBall] = passwordProbability * typoProbability
+		// only add password to ball if PasswordProbability * typoProbability > 0
+		if PasswordProbability*typoProbability > 0 {
+			ballProbability[passwordInBall] = PasswordProbability * typoProbability
 		}
 	}
 
 	// find the optimal set of passwords in the ball such that aggregate probability of each password in the ball
 	// is lower than the probability of the qth most probable password in the blacklist
-	probabilityOfQthPassword := findProbabilityOfQthPassword(frequencyBlacklist, q)
-	cutoff := float64(probabilityOfQthPassword) - passwordProbability(submittedPassword, frequencyBlacklist)
+	probabilityOfQthPassword := FindProbabilityOfQthPassword(frequencyBlacklist, q)
+	cutoff := float64(probabilityOfQthPassword) - PasswordProbability(submittedPassword, frequencyBlacklist)
 
 	// get the set of passwords that maximises utility subject to completeness and security
 	combinationToTry := CombinationProbability{}
@@ -49,7 +49,7 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 }
 
 // FindProbabilityOfQthPassword given the blacklist, find the probability of the qth password in the distribution
-func findProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) float64 {
+func FindProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) float64 {
 
 	if q >= len(frequencyBlacklist) {
 		return 0
@@ -135,7 +135,8 @@ func (c *CombinationProbability) addPassword(password string) string {
 	return password
 }
 
-func passwordProbability(password string, frequencies map[string]int) float64 {
+// PasswordProbability calculates the probability of a password in a list
+func PasswordProbability(password string, frequencies map[string]int) float64 {
 	probability, ok := frequencies[password]
 
 	if ok {

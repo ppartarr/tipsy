@@ -48,7 +48,7 @@ func TestCalculateTypoProbability(t *testing.T) {
 }
 
 func TestCalculateProbabilityPasswordInBlacklist(t *testing.T) {
-	prob := passwordProbability("password", testFrequencyBlacklist)
+	prob := PasswordProbability("password", testFrequencyBlacklist)
 	if prob != float64(100)/float64(550) {
 		t.Error("calculate typo probability password in blacklist is not working...")
 	}
@@ -81,13 +81,13 @@ func TestMaxProbability(t *testing.T) {
 }
 
 func TestFindProbabilityOfQthPassword(t *testing.T) {
-	prob := findProbabilityOfQthPassword(testFrequencyBlacklist, 3)
+	prob := FindProbabilityOfQthPassword(testFrequencyBlacklist, 3)
 	fmt.Println(prob)
 	if prob != float64(80)/float64(550) {
 		t.Error("should return the corrector prob")
 	}
 
-	prob = findProbabilityOfQthPassword(testFrequencyBlacklist, 100)
+	prob = FindProbabilityOfQthPassword(testFrequencyBlacklist, 100)
 	if prob != 0 {
 		t.Error("should return -1 if index is out of bounds")
 	}
