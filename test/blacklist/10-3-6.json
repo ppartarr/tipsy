@@ -1,0 +1,36 @@
+{
+  "GuessList": [
+    "123456",
+    "123456789",
+    "password",
+    "iloveyou",
+    "princess",
+    "1234567",
+    "rockyou",
+    "abc123",
+    "nicole",
+    "daniel"
+  ],
+  "NaiveGuessList": [
+    "123456",
+    "123456789",
+    "password",
+    "iloveyou",
+    "princess",
+    "1234567",
+    "rockyou",
+    "12345678",
+    "abc123",
+    "nicole"
+  ],
+  "LambdaQ": 0.17829820071674887,
+  "LambdaQFuzzy": 0,
+  "SecLoss": -0.17829820071674887,
+  "AttackerListFile": "../data/rockyou-1000-withcount.txt",
+  "DefenderListFile": "../data/rockyou-1000-withcount.txt",
+  "Correctors": [
+    "swc-all",
+    "rm-last",
+    "swc-first"
+  ]
+}

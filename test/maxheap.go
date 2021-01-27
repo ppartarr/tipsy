@@ -1,4 +1,4 @@
-package main
+package test
 
 import (
 	"container/heap"
@@ -28,6 +28,7 @@ func (pq PriorityQueue) Swap(i, j int) {
 	pq[j].index = j
 }
 
+// Push adds an item to the priority q
 func (pq *PriorityQueue) Push(x interface{}) {
 	n := len(*pq)
 	item := x.(*Item)
@@ -35,6 +36,7 @@ func (pq *PriorityQueue) Push(x interface{}) {
 	*pq = append(*pq, item)
 }
 
+// Pop removes the smallest item from the priority q
 func (pq *PriorityQueue) Pop() interface{} {
 	old := *pq
 	n := len(old)
@@ -45,6 +47,7 @@ func (pq *PriorityQueue) Pop() interface{} {
 	return item
 }
 
+// Find finds an item with the given value and returns it. Nil is nothing is found
 func (pq PriorityQueue) Find(value string) *Item {
 	for _, item := range pq {
 		if item.value == value {
