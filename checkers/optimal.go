@@ -218,7 +218,6 @@ func LoadFrequencyBlacklist(filename string, minPasswordLength int) map[string]i
 		}
 
 		// TODO add support for whitespace passwords
-		// make sure it's not a whitespace password
 		if len(line) > 1 {
 			word := line[1]
 			if len(word) >= minPasswordLength {
