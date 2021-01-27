@@ -197,7 +197,7 @@ func (checker *Checker) CalculateTypoProbability(correctionType string) float64 
 	return typoFixProbability[correctionType]
 }
 
-// LoadFrequencyBlacklist loads a file of frequency + high-probability password e.g. ./data/rockyou-1000-withcount.txt
+// LoadFrequencyBlacklist loads a file of frequency + high-probability password e.g. ./data/rockyou-1k-withcount.txt
 func LoadFrequencyBlacklist(filename string, minPasswordLength int) map[string]int {
 	file, err := os.Open(filename)
 	if err != nil {

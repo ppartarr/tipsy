@@ -63,7 +63,7 @@ func TestSecLossBlacklist(t *testing.T) {
 	server := &config.Server{
 		Checker: &config.Checker{
 			Blacklist: &config.BlacklistChecker{
-				File: "../data/rockyou-1000.txt",
+				File: "../data/rockyou-1k.txt",
 			},
 		},
 

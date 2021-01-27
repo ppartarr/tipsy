@@ -33,7 +33,7 @@ func remove(slice []string, s string) []string {
 	return slice
 }
 
-// LoadBlacklist loads a file of high-probability password e.g. ./data/rockyou-1000.txt
+// LoadBlacklist loads a file of high-probability password e.g. ./data/rockyou-1k.txt
 func LoadBlacklist(filename string) []string {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {

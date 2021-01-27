@@ -8,6 +8,7 @@ import (
 	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/config"
 	"github.com/ppartarr/tipsy/correctors"
+	"github.com/thoas/go-funk"
 )
 
 // Ball alias
@@ -237,19 +238,25 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 	var guessListBall []string
 	for _, password := range guessList {
 		// get ball of passwords in guess list
-		ball := unionBall(password, done, config, checker, attackerList, q, blacklist)
+		// ball := unionBall(password, done, config, checker, attackerList, q, blacklist)
+		ball := correctors.GetBall(password, config.Correctors)
+		ball = append(ball, password)
 		guessListBall = append(guessListBall, ball...)
 	}
 
 	guessListBall = correctors.DeleteEmpty(guessListBall)
 	log.Println(guessListBall)
-	lambdaQFuzzy := ballProbability(guessListBall, defenderList)
+
+	// remove duplicates from guess list
+	guessListBall = funk.UniqString(guessListBall)
+
+	lambdaQGreedy := ballProbability(guessListBall, defenderList)
 	lambdaQ := ballProbability(naiveGuessList, defenderList)
 	log.Println("typo guess list:", guessList)
 	log.Println("normal guess list:", naiveGuessList)
 	log.Println("lambda q", lambdaQ)
-	log.Println("lambda q fuzzy", lambdaQFuzzy)
-	log.Println("sec loss", lambdaQFuzzy-lambdaQ)
+	log.Println("lambda q greedy", lambdaQGreedy)
+	log.Println("sec loss", lambdaQGreedy-lambdaQ)
 	result := &Result{
 		GuessList:        guessList,
 		NaiveGuessList:   naiveGuessList,
