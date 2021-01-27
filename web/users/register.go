@@ -109,6 +109,8 @@ func (userService *UserService) Register(w http.ResponseWriter, r *http.Request)
 			PrivateKey:    privateKey,
 		}
 
+		log.Println(typtopUser)
+
 		err = userService.createTypTopUser(typtopUser)
 		if err != nil {
 			return nil, errors.New("couldn't create typtop user")

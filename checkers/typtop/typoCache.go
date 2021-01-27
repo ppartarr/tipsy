@@ -3,7 +3,6 @@ package typtop
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
 	"encoding/json"
 	"log"
 	"math"
@@ -54,7 +53,7 @@ func decryptCacheState(privateKey *rsa.PrivateKey, encryptedCacheState []byte) *
 func addPasswordsToTypoCache(pairs []TypoIndexPair, privateKey *rsa.PrivateKey, typoCache [][]byte) [][]byte {
 	encodedPrivateKey := encodeKey(privateKey)
 	for _, pair := range pairs {
-		fmt.Println("adding password to typo cache: ", pair)
+		log.Println("adding password to typo cache: ", pair)
 		typoCache[pair.index] = aesEncrypt(pair.typo, encodedPrivateKey)
 	}
 	return typoCache
