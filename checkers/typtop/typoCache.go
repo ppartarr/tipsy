@@ -84,17 +84,14 @@ func initTypoCache(typoCache [][]byte, privateKey *rsa.PrivateKey) [][]byte {
 	return typoCache
 }
 
-// TODO extend to use any rune instead of US alphanumerics
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>?")
-
 func generateRandomStringFromRunes(length int) string {
 	b := make([]rune, length)
 	for i := range b {
-		randomLength, err := rand.Int(rand.Reader, big.NewInt(int64(len(letterRunes))))
+		randomLength, err := rand.Int(rand.Reader, big.NewInt(int64(len(correctors.LetterRunes))))
 		if err != nil {
 			log.Println("failed to generate random int")
 		}
-		b[i] = letterRunes[randomLength.Int64()]
+		b[i] = correctors.LetterRunes[randomLength.Int64()]
 	}
 	return string(b)
 }

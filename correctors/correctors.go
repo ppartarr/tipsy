@@ -133,7 +133,7 @@ func SwitchShiftLastNCharacters(password string, n int) string {
 func InverseRemoveLast(password string) []string {
 	edits := make([]string, 1)
 
-	for _, letter := range letterRunes {
+	for _, letter := range LetterRunes {
 		// add every rune in every index
 		edits = append(edits, password+string(letter))
 	}
@@ -145,7 +145,7 @@ func InverseRemoveLast(password string) []string {
 func InverseRemoveFirst(password string) []string {
 	edits := make([]string, 1)
 
-	for _, letter := range letterRunes {
+	for _, letter := range LetterRunes {
 		// add every rune in every index
 		edits = append(edits, string(letter)+password)
 	}
