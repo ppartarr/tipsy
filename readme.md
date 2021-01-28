@@ -8,10 +8,6 @@
 * add support for whitespace passwords
 * block attempts by IP
 
-## Important
-
-* Put authentication system online at typo.partarrieu.me
-
 ## Future work
 
 * make correctors work with different keyboard layouts

@@ -2,10 +2,16 @@
 
 The passwords lists were taken from this seclist repo [1]
 
-name | length
+name | lines
 -----|------
-rock-you | 14 344 383
-myspace | 37 144
+rock-you | 14m
+php bb | 184k
+muslim match | 95k
+my space | 37k
+
+
+14m = 9h20
+1m = 40m?
 
 ## Links
 [1] seclists https://github.com/danielmiessler/SecLists/tree/master/Passwords/Leaked-Databases
