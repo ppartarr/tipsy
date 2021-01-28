@@ -40,19 +40,19 @@ func TestSecLossAlways(t *testing.T) {
 	checker := "always"
 	q := 10
 	ballSize := 3
-	maxPasswordLength := 6
+	minPasswordLength := 6
 	attackerListFile := "../data/rockyou-1m-withcount.txt"
 	defenderListFile := "../data/rockyou-1m-withcount.txt"
 
 	// convert results to json
-	result := greedyMaxCoverageHeap(server, q, ballSize, maxPasswordLength, attackerListFile, defenderListFile)
+	result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, defenderListFile)
 	bytes, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	// save json to file
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(maxPasswordLength) + ".json"
+	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + ".json"
 	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 	if err != nil {
 		t.Error(err.Error())
@@ -91,19 +91,19 @@ func TestSecLossBlacklist(t *testing.T) {
 	checker := "blacklist"
 	q := 10
 	ballSize := 3
-	maxPasswordLength := 6
+	minPasswordLength := 6
 	attackerListFile := "../data/rockyou-1m-withcount.txt"
 	defenderListFile := "../data/rockyou-1m-withcount.txt"
 
 	// convert results to json
-	result := greedyMaxCoverageHeap(server, q, ballSize, maxPasswordLength, attackerListFile, defenderListFile)
+	result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, defenderListFile)
 	bytes, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	// save json to file
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(maxPasswordLength) + ".json"
+	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + ".json"
 	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 	if err != nil {
 		t.Error(err.Error())
@@ -143,19 +143,19 @@ func TestSecLossOptimal(t *testing.T) {
 	checker := "optimal"
 	q := 10
 	ballSize := 3
-	maxPasswordLength := 6
+	minPasswordLength := 6
 	attackerListFile := "../data/rockyou-1m-withcount.txt"
 	defenderListFile := "../data/rockyou-1m-withcount.txt"
 
 	// convert results to json
-	result := greedyMaxCoverageHeap(server, q, ballSize, maxPasswordLength, attackerListFile, defenderListFile)
+	result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, defenderListFile)
 	bytes, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	// save json to file
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(maxPasswordLength) + ".json"
+	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + ".json"
 	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 	if err != nil {
 		t.Error(err.Error())
