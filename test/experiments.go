@@ -96,7 +96,8 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 
 				// printPriorityQueue(&priorityQueue, item.value, "rockyouG")
 
-				for float64(item.weight) > float64(ballSize)*checkers.PasswordProbability(registeredPassword, attackerList) && len(guessList) < q {
+				_, inSlice := done[item.value]
+				for float64(item.weight) > float64(ballSize)*checkers.PasswordProbability(registeredPassword, attackerList) && len(guessList) < q && !inSlice {
 					// add guess to guess list
 					log.Println("Guess", len(guessList), "/", q, "password:", item.value, "weight:", float64(item.weight))
 					guessList = append(guessList, item.value)
