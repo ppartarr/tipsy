@@ -67,55 +67,6 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 		blacklist = checkers.LoadBlacklist(config.Checker.Blacklist.File)
 	}
 
-	// pythonGuessListBall := []string{"iloveyou",
-	// 	"babygirl1",
-	// 	"12345678",
-	// 	"123456",
-	// 	"1234567890",
-	// 	"abc123",
-	// 	"ROCKYOU",
-	// 	"1234567",
-	// 	"princess",
-	// 	"password",
-	// }
-	// goGuessListBall := []string{
-	// 	"123456",
-	// 	"1234567890",
-	// 	"password1",
-	// 	"iloveyou",
-	// 	"princess",
-	// 	"1234567",
-	// 	"rockyouf",
-	// 	"babygirl1",
-	// 	"abc123",
-	// 	"nicole",
-	// }
-	// naiveListBall := []string{
-	// 	"123456",
-	// 	"123456789",
-	// 	"password",
-	// 	"iloveyou",
-	// 	"princess",
-	// 	"1234567",
-	// 	"rockyou",
-	// 	"12345678",
-	// 	"abc123",
-	// 	"nicole",
-	// }
-	// log.Println(ballProbability(pythonGuessListBall, attackerList))
-	// log.Println(ballProbability(goGuessListBall, attackerList))
-	// log.Println(ballProbability(naiveListBall, attackerList))
-	// log.Fatal(0)
-
-	// log.Println(unionBallNotDone("iloveyou", done, config, checker, attackerList, q, blacklist))
-	// log.Println(getNeighbourspwm("iloveyou", config.Correctors, config, checker, attackerList, q, blacklist))
-	// log.Fatal(0)
-
-	// log.Println("starting loop")
-	// log.Println(power("1234567", attackerList, blacklist, done))
-	// log.Println(power("daniela", attackerList, blacklist, done))
-	// log.Fatal(power("danieln", attackerList, blacklist, done))
-
 	for len(guessList) < q {
 		// get the next most probable password from the attacker's password list
 		if defenderListIndex < len(sortedAttackerList) {
@@ -438,10 +389,6 @@ func CheckInverseOptimal(submittedPassword string, frequencyBlacklist map[string
 	// get the set of passwords that maximises utility subject to completeness and security
 	combinationToTry := checkers.CombinationProbability{}
 	combinationToTry = checkers.FindOptimalSubset(ballProbability, cutoff)
-
-	// log.Println("combination to try", combinationToTry)
-	// log.Println("prob of qth password", probabilityOfQthPassword)
-	// log.Println("cutoff", cutoff)
 
 	return combinationToTry.Passwords
 }
