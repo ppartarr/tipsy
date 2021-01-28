@@ -41,10 +41,6 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 	combinationToTry := CombinationProbability{}
 	combinationToTry = FindOptimalSubset(ballProbability, cutoff)
 
-	log.Println("combination to try", combinationToTry)
-	log.Println("prob of qth password", probabilityOfQthPassword)
-	log.Println("cutoff", cutoff)
-
 	return combinationToTry.Passwords
 }
 

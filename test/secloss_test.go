@@ -41,8 +41,8 @@ func TestSecLossAlways(t *testing.T) {
 	q := 10
 	ballSize := 3
 	maxPasswordLength := 6
-	attackerListFile := "../data/rockyou-withcount.txt"
-	defenderListFile := "../data/rockyou-withcount.txt"
+	attackerListFile := "../data/rockyou-1m-withcount.txt"
+	defenderListFile := "../data/rockyou-1m-withcount.txt"
 
 	// convert results to json
 	result := greedyMaxCoverageHeap(server, q, ballSize, maxPasswordLength, attackerListFile, defenderListFile)
@@ -92,8 +92,8 @@ func TestSecLossBlacklist(t *testing.T) {
 	q := 10
 	ballSize := 3
 	maxPasswordLength := 6
-	attackerListFile := "../data/rockyou-withcount.txt"
-	defenderListFile := "../data/rockyou-withcount.txt"
+	attackerListFile := "../data/rockyou-1m-withcount.txt"
+	defenderListFile := "../data/rockyou-1m-withcount.txt"
 
 	// convert results to json
 	result := greedyMaxCoverageHeap(server, q, ballSize, maxPasswordLength, attackerListFile, defenderListFile)
