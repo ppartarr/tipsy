@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/config"
@@ -45,8 +46,11 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 	checker := checkers.NewChecker(config.Typos, config.Correctors)
 
 	// sample from password leaks
+	now := time.Now()
 	defenderList := checkers.LoadFrequencyBlacklist(defenderListFile, minPasswordLength)
 	attackerList := checkers.LoadFrequencyBlacklist(attackerListFile, minPasswordLength)
+	fmt.Println(time.Since(now))
+	now = time.Now()
 
 	var (
 		guessList          []string
@@ -267,6 +271,8 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 		DefenderListFile: defenderListFile,
 		Correctors:       config.Correctors,
 	}
+	fmt.Println(time.Since(now))
+	now = time.Now()
 	return result
 }
 
