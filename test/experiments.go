@@ -33,7 +33,7 @@ type Result struct {
 	GuessList        []string
 	NaiveGuessList   []string
 	LambdaQ          float64
-	LambdaQFuzzy     float64
+	LambdaQGreedy    float64
 	SecLoss          float64
 	AttackerListFile string
 	DefenderListFile string
@@ -196,7 +196,7 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 	lambdaQGreedy := ballProbability(guessListBall, defenderList)
 	lambdaQ := ballProbability(naiveGuessList, defenderList)
 	log.Println("typo guess list:", guessList)
-	log.Println("normal guess list:", naiveGuessList)
+	log.Println("naive guess list:", naiveGuessList)
 	log.Println("lambda q", lambdaQ)
 	log.Println("lambda q greedy", lambdaQGreedy)
 	log.Println("sec loss", lambdaQGreedy-lambdaQ)
@@ -204,7 +204,7 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 		GuessList:        guessList,
 		NaiveGuessList:   naiveGuessList,
 		LambdaQ:          lambdaQ,
-		LambdaQFuzzy:     lambdaQGreedy,
+		LambdaQGreedy:    lambdaQGreedy,
 		SecLoss:          lambdaQGreedy - lambdaQ,
 		AttackerListFile: attackerListFile,
 		DefenderListFile: defenderListFile,
