@@ -154,28 +154,18 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 			neighbours := getNeighbours(registeredPassword, config.Correctors, config, checker, attackerList, q, blacklist)
 			neighbours = append(neighbours, registeredPassword)
 
-			allNeighbours := neighbours
-
 			for _, neighbour := range neighbours {
-				// don't add neighbour if it's already in the priority queue
-				if priorityQueue.Find(neighbour) != nil {
-					allNeighbours = remove(allNeighbours, neighbour)
-				}
-				// don't add neighbour to priority queue if it's already been tested
 				_, ok := done[neighbour]
-				if ok {
-					allNeighbours = remove(allNeighbours, neighbour)
-				}
-			}
 
-			// add items to the priority queue
-			for _, neighbour := range allNeighbours {
-				weight := power(neighbour, attackerList, done, config, checker, q, blacklist)
-				item := &Item{
-					value:  neighbour,
-					weight: -weight,
+				// don't add neighbour if it's already in the priority queue or if it has already been processed
+				if priorityQueue.Find(neighbour) == nil && !ok {
+					weight := power(neighbour, attackerList, done, config, checker, q, blacklist)
+					item := &Item{
+						value:  neighbour,
+						weight: -weight,
+					}
+					heap.Push(&priorityQueue, item)
 				}
-				heap.Push(&priorityQueue, item)
 			}
 
 			// print heap size update

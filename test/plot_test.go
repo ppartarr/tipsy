@@ -26,7 +26,7 @@ func TestPlot(t *testing.T) {
 	ballSize := 3
 	minPasswordLength := 6
 
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + "-" + dataset + ".json"
+	filename := buildFilename(q, ballSize, minPasswordLength, checker)
 
 	results := filepath.Join(checker, filename)
 
