@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/ppartarr/tipsy/config"
@@ -52,7 +53,7 @@ func TestSecLossAlways(t *testing.T) {
 	}
 
 	// save json to file
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + ".json"
+	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
 	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 	if err != nil {
 		t.Error(err.Error())
@@ -103,7 +104,7 @@ func TestSecLossBlacklist(t *testing.T) {
 	}
 
 	// save json to file
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + ".json"
+	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
 	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 	if err != nil {
 		t.Error(err.Error())
@@ -155,9 +156,19 @@ func TestSecLossOptimal(t *testing.T) {
 	}
 
 	// save json to file
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + ".json"
+	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
 	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 	if err != nil {
 		t.Error(err.Error())
 	}
+}
+
+func buildFilename(q int, ballsize int, minPasswordLength int, dataset string) string {
+	return strconv.Itoa(q) + "-" + strconv.Itoa(ballsize) + "-" + strconv.Itoa(minPasswordLength) + "-" + dataset + ".json"
+}
+
+func getDatasetFromFilename(filename string) string {
+	slice := strings.Split(filename, "/")
+	slice = strings.Split(slice[len(slice)-1], "-")
+	return slice[0]
 }
