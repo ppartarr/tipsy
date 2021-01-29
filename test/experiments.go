@@ -190,21 +190,8 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 		}
 	}
 
-	// create guess list ball for lambda q calculation
-	var guessListBall []string
-	for _, password := range guessList {
-		// get ball of passwords in guess list
-		// ball := unionBall(password, done, config, checker, attackerList, q, blacklist)
-		ball := correctors.GetBall(password, config.Correctors)
-		ball = append(ball, password)
-		guessListBall = append(guessListBall, ball...)
-	}
-
-	guessListBall = correctors.DeleteEmpty(guessListBall)
+	guessListBall := guessListBall(guessList, config.Correctors)
 	log.Println(guessListBall)
-
-	// remove duplicates from guess list
-	guessListBall = funk.UniqString(guessListBall)
 
 	lambdaQGreedy := ballProbability(guessListBall, defenderList)
 	lambdaQ := ballProbability(naiveGuessList, defenderList)
@@ -226,6 +213,27 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 	fmt.Println(time.Since(now))
 	now = time.Now()
 	return result
+}
+
+func guessListBall(guessList []string, corrections []string) []string {
+	// create guess list ball for lambda q calculation
+	var guessListBall []string
+
+	for _, password := range guessList {
+		// get ball of passwords in guess list
+		// ball := unionBall(password, done, config, checker, attackerList, q, blacklist)
+		ball := correctors.GetBall(password, corrections)
+		ball = append(ball, password)
+		guessListBall = append(guessListBall, ball...)
+	}
+
+	// remove duplicates from guess list
+	guessListBall = funk.UniqString(guessListBall)
+
+	// remove
+	guessListBall = correctors.DeleteEmpty(guessListBall)
+
+	return guessListBall
 }
 
 func printPriorityQueue(pq *PriorityQueue, password string, match string) {
