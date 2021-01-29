@@ -38,7 +38,7 @@ func TestSecLossAlways(t *testing.T) {
 	}
 
 	checker := "always"
-	q := 10
+	q := 1000
 	ballSize := 3
 	minPasswordLength := 6
 	attackerListFile := "../data/rockyou-1m-withcount.txt"
