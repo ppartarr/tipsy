@@ -115,7 +115,7 @@ func TestSecLossOptimal(t *testing.T) {
 		Checker: &config.Checker{
 			Optimal: &config.OptimalChecker{
 				File:                    "data/rockyou-1k.txt",
-				QthMostProbablePassword: 10,
+				QthMostProbablePassword: 1000,
 			},
 		},
 
