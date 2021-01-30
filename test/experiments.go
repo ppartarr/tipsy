@@ -33,7 +33,7 @@ type Result struct {
 	GuessList        []string
 	NaiveGuessList   []string
 	LambdaQ          float64
-	LambdaQFuzzy     float64
+	LambdaQGreedy    float64
 	SecLoss          float64
 	AttackerListFile string
 	DefenderListFile string
@@ -154,28 +154,18 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 			neighbours := getNeighbours(registeredPassword, config.Correctors, config, checker, attackerList, q, blacklist)
 			neighbours = append(neighbours, registeredPassword)
 
-			allNeighbours := neighbours
-
 			for _, neighbour := range neighbours {
-				// don't add neighbour if it's already in the priority queue
-				if priorityQueue.Find(neighbour) != nil {
-					allNeighbours = remove(allNeighbours, neighbour)
-				}
-				// don't add neighbour to priority queue if it's already been tested
 				_, ok := done[neighbour]
-				if ok {
-					allNeighbours = remove(allNeighbours, neighbour)
-				}
-			}
 
-			// add items to the priority queue
-			for _, neighbour := range allNeighbours {
-				weight := power(neighbour, attackerList, done, config, checker, q, blacklist)
-				item := &Item{
-					value:  neighbour,
-					weight: -weight,
+				// don't add neighbour if it's already in the priority queue or if it has already been processed
+				if priorityQueue.Find(neighbour) == nil && !ok {
+					weight := power(neighbour, attackerList, done, config, checker, q, blacklist)
+					item := &Item{
+						value:  neighbour,
+						weight: -weight,
+					}
+					heap.Push(&priorityQueue, item)
 				}
-				heap.Push(&priorityQueue, item)
 			}
 
 			// print heap size update
@@ -190,26 +180,13 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 		}
 	}
 
-	// create guess list ball for lambda q calculation
-	var guessListBall []string
-	for _, password := range guessList {
-		// get ball of passwords in guess list
-		// ball := unionBall(password, done, config, checker, attackerList, q, blacklist)
-		ball := correctors.GetBall(password, config.Correctors)
-		ball = append(ball, password)
-		guessListBall = append(guessListBall, ball...)
-	}
-
-	guessListBall = correctors.DeleteEmpty(guessListBall)
+	guessListBall := guessListBall(guessList, config.Correctors)
 	log.Println(guessListBall)
-
-	// remove duplicates from guess list
-	guessListBall = funk.UniqString(guessListBall)
 
 	lambdaQGreedy := ballProbability(guessListBall, defenderList)
 	lambdaQ := ballProbability(naiveGuessList, defenderList)
 	log.Println("typo guess list:", guessList)
-	log.Println("normal guess list:", naiveGuessList)
+	log.Println("naive guess list:", naiveGuessList)
 	log.Println("lambda q", lambdaQ)
 	log.Println("lambda q greedy", lambdaQGreedy)
 	log.Println("sec loss", lambdaQGreedy-lambdaQ)
@@ -217,7 +194,7 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 		GuessList:        guessList,
 		NaiveGuessList:   naiveGuessList,
 		LambdaQ:          lambdaQ,
-		LambdaQFuzzy:     lambdaQGreedy,
+		LambdaQGreedy:    lambdaQGreedy,
 		SecLoss:          lambdaQGreedy - lambdaQ,
 		AttackerListFile: attackerListFile,
 		DefenderListFile: defenderListFile,
@@ -226,6 +203,27 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 	fmt.Println(time.Since(now))
 	now = time.Now()
 	return result
+}
+
+func guessListBall(guessList []string, corrections []string) []string {
+	// create guess list ball for lambda q calculation
+	var guessListBall []string
+
+	for _, password := range guessList {
+		// get ball of passwords in guess list
+		// ball := unionBall(password, done, config, checker, attackerList, q, blacklist)
+		ball := correctors.GetBall(password, corrections)
+		ball = append(ball, password)
+		guessListBall = append(guessListBall, ball...)
+	}
+
+	// remove duplicates from guess list
+	guessListBall = funk.UniqString(guessListBall)
+
+	// remove
+	guessListBall = correctors.DeleteEmpty(guessListBall)
+
+	return guessListBall
 }
 
 func printPriorityQueue(pq *PriorityQueue, password string, match string) {

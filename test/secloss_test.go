@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/ppartarr/tipsy/config"
@@ -38,7 +39,7 @@ func TestSecLossAlways(t *testing.T) {
 	}
 
 	checker := "always"
-	q := 10
+	q := 1000
 	ballSize := 3
 	minPasswordLength := 6
 	attackerListFile := "../data/rockyou-1m-withcount.txt"
@@ -52,7 +53,7 @@ func TestSecLossAlways(t *testing.T) {
 	}
 
 	// save json to file
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + ".json"
+	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
 	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 	if err != nil {
 		t.Error(err.Error())
@@ -103,7 +104,7 @@ func TestSecLossBlacklist(t *testing.T) {
 	}
 
 	// save json to file
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + ".json"
+	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
 	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 	if err != nil {
 		t.Error(err.Error())
@@ -115,7 +116,7 @@ func TestSecLossOptimal(t *testing.T) {
 		Checker: &config.Checker{
 			Optimal: &config.OptimalChecker{
 				File:                    "data/rockyou-1k.txt",
-				QthMostProbablePassword: 10,
+				QthMostProbablePassword: 1000,
 			},
 		},
 
@@ -155,9 +156,19 @@ func TestSecLossOptimal(t *testing.T) {
 	}
 
 	// save json to file
-	filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + ".json"
+	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
 	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 	if err != nil {
 		t.Error(err.Error())
 	}
+}
+
+func buildFilename(q int, ballsize int, minPasswordLength int, dataset string) string {
+	return strconv.Itoa(q) + "-" + strconv.Itoa(ballsize) + "-" + strconv.Itoa(minPasswordLength) + "-" + dataset + ".json"
+}
+
+func getDatasetFromFilename(filename string) string {
+	slice := strings.Split(filename, "/")
+	slice = strings.Split(slice[len(slice)-1], "-")
+	return slice[0]
 }

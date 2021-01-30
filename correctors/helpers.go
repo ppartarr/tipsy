@@ -61,11 +61,11 @@ func ApplyInverseCorrectionFunction(corrector string, password string) []string 
 	case "sws-lastn":
 		inverse = append(inverse, SwitchShiftLastNCharacters(password, 2))
 	case "upncap":
-		inverse = append(inverse, CapitalToUpper(password))
+		inverse = append(inverse, UpperToCapital(password))
 	case "n2s-last":
 		inverse = append(inverse, ConvertLastSymbolToNumber(password))
 	case "cap2up":
-		inverse = append(inverse, UpperToCapital(password))
+		inverse = append(inverse, CapitalToUpper(password))
 	case "add1-last":
 		inverse = append(inverse, RemoveLastChar(password))
 	}
