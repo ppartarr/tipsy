@@ -3,6 +3,7 @@ package checkers
 import (
 	"bufio"
 	"log"
+	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -84,16 +85,16 @@ func FindOptimalSubset(ballProbability map[string]float64, cutoff float64) Combi
 	passwordsInBall = correctors.DeleteEmpty(passwordsInBall)
 
 	combinations := generateCombinations(passwordsInBall)
-	combinationsProbability := []CombinationProbability{}
+	combinationsProbability := make([]CombinationProbability, len(combinations))
 
 	// calculate the aggregate probability of each password in a set
-	for _, combination := range combinations {
+	for index, combination := range combinations {
 		combinationProbability := CombinationProbability{}
 		for _, password := range combination {
 			combinationProbability.addPassword(password)
 			combinationProbability.addProbability(ballProbability[password])
 		}
-		combinationsProbability = append(combinationsProbability, combinationProbability)
+		combinationsProbability[index] = combinationProbability
 	}
 
 	// build a new slice with combinations whose probability is smaller or equal to the cutoff
