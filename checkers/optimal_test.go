@@ -15,7 +15,7 @@ var testFrequencyBlacklist = map[string]int{
 	"there":           60,
 	"foobar":          50,
 	"duckduckgo":      40,
-	"world":           30,
+	"Password!":       30,
 	"nomore":          20,
 	"babydon'thurtme": 10,
 }
@@ -25,14 +25,14 @@ func TestCheckOptimal(t *testing.T) {
 
 	ball := checker.CheckOptimal("password!", testFrequencyBlacklist, 5)
 	fmt.Println(ball)
-	if !assert.ElementsMatch(t, ball, []string{"Password!", "PASSWORD!"}) {
+	if !assert.ElementsMatch(t, ball, []string{"Password!", "password"}) {
 		t.Error("ball should be the set of strings containing the output of the correctors, unless it's in the blacklist")
 	}
 
+	ball = checker.CheckOptimal("password!", testFrequencyBlacklist, 10)
 	fmt.Println(ball)
-	ball = checker.CheckOptimal("password!", testFrequencyBlacklist, 1)
-	if !assert.ElementsMatch(t, ball, []string{"Password!", "PASSWORD!", "password!"}) {
-		t.Error("ball should be the set of strings containing the output of the correctors")
+	if !assert.ElementsMatch(t, ball, []string{"Password!"}) {
+		t.Error("cutoff is 0, ball should be the empty set")
 	}
 }
 

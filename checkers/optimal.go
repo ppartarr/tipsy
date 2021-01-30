@@ -35,7 +35,7 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 	// find the optimal set of passwords in the ball such that aggregate probability of each password in the ball
 	// is lower than the probability of the qth most probable password in the blacklist
 	probabilityOfQthPassword := FindProbabilityOfQthPassword(frequencyBlacklist, q)
-	cutoff := float64(probabilityOfQthPassword) - PasswordProbability(submittedPassword, frequencyBlacklist)
+	cutoff := probabilityOfQthPassword - PasswordProbability(submittedPassword, frequencyBlacklist)
 
 	// get the set of passwords that maximises utility subject to completeness and security
 	combinationToTry := CombinationProbability{}
@@ -76,8 +76,10 @@ func FindProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) floa
 // returns the set with the highest utility
 func FindOptimalSubset(ballProbability map[string]float64, cutoff float64) CombinationProbability {
 	passwordsInBall := make([]string, len(ballProbability))
+	i := 0
 	for word := range ballProbability {
-		passwordsInBall = append(passwordsInBall, word)
+		passwordsInBall[i] = word
+		i++
 	}
 	passwordsInBall = correctors.DeleteEmpty(passwordsInBall)
 
