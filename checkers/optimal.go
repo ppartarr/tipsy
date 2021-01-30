@@ -159,8 +159,9 @@ func (c *CombinationProbability) addProbability(probability float64) float64 {
 
 // GenerateCombinations given a slice of strings, will generate every combination of that slice
 // e.g. given [a b c] will return [[a] [b] [c] [a b] [a c] [b c] [a b c]]
-func generateCombinations(passwordsInBall []string) (combinations [][]string) {
-	passwordsInBall = correctors.DeleteEmpty(passwordsInBall)
+func generateCombinations(passwordsInBall []string) [][]string {
+
+	combinations := make([][]string, int(math.Pow(2, float64(len(passwordsInBall)))))
 
 	for i := 1; i <= len(passwordsInBall); i++ {
 		intCombinations := combin.Combinations(len(passwordsInBall), i)
