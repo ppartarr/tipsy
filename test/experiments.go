@@ -312,22 +312,7 @@ func getNeighbours(password string, bestCorrectors []string, conf *config.Server
 	neighbours := make([]string, 0)
 	for _, corrector := range bestCorrectors {
 		edits := make([]string, 0)
-
-		if conf.Checker.Always {
-			edits = correctors.ApplyInverseCorrectionFunction(corrector, password)
-			neighbours = append(neighbours, edits...)
-		} else if conf.Checker.Blacklist != nil {
-			edits = correctors.ApplyInverseCorrectionFunction(corrector, password)
-			for _, neighbour := range neighbours {
-				blacklist := checkers.LoadBlacklist(conf.Checker.Blacklist.File)
-				if !correctors.StringInSlice(neighbour, blacklist) {
-					neighbours = append(neighbours, edits...)
-				}
-			}
-		} else if conf.Checker.Optimal != nil {
-			edits = CheckInverseOptimal(password, attackerList, q, checker)
-		}
-
+		edits = correctors.ApplyInverseCorrectionFunction(corrector, password)
 		neighbours = append(neighbours, edits...)
 	}
 	neighbours = correctors.DeleteEmpty(neighbours)
