@@ -2,12 +2,16 @@ package test
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/config"
 )
 
@@ -90,7 +94,7 @@ func TestSecLossBlacklist(t *testing.T) {
 	}
 
 	checker := "blacklist"
-	q := 10
+	q := 1000
 	ballSize := 3
 	minPasswordLength := 6
 	attackerListFile := "../data/rockyou-1m-withcount.txt"
@@ -142,7 +146,7 @@ func TestSecLossOptimal(t *testing.T) {
 	}
 
 	checker := "optimal"
-	q := 10
+	q := 1000
 	ballSize := 3
 	minPasswordLength := 6
 	attackerListFile := "../data/rockyou-1m-withcount.txt"
