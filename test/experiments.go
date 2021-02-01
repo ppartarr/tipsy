@@ -15,19 +15,6 @@ import (
 // Ball alias
 type Ball []string
 
-var typoFrequencies map[string]int = map[string]int{
-	"swc-all":   1698,
-	"rm-last":   382,
-	"swc-first": 209,
-	"rm-first":  55,
-	"sws-last1": 19,
-	"sws-lastn": 14,
-	"upncap":    13,
-	"n2s-last":  9,
-	"cap2up":    5,
-	"add1-last": 5,
-}
-
 // Result contains all the vars necessary to reproduce a test
 type Result struct {
 	GuessList        []string
