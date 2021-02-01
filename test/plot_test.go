@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"strconv"
 	"testing"
 
 	"github.com/ppartarr/tipsy/checkers"
