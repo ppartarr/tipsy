@@ -175,6 +175,7 @@ func TestPlotChecker(t *testing.T) {
 	err = plotutil.AddLinePoints(p,
 		"rockyou", curves["rockyou"],
 		"phpbb", curves["phpbb"],
+		"muslim match", curves["muslim"],
 	)
 	if err != nil {
 		panic(err)
@@ -182,6 +183,94 @@ func TestPlotChecker(t *testing.T) {
 
 	// Save the plot to a PNG file.
 	if err := p.Save(4*vg.Inch, 4*vg.Inch, filepath.Join("plots", checker+".png")); err != nil {
+		panic(err)
+	}
+}
+
+func TestPlotDataset(t *testing.T) {
+	// seed randomness
+	rand.Seed(int64(0))
+
+	checkerz := []string{"always", "blacklist", "optimal"}
+	dataset := "phpbb"
+	q := 1000
+	ballSize := 3
+	minPasswordLength := 6
+
+	results := make(map[string]*Result, len(checkerz))
+	for _, checker := range checkerz {
+		filename := buildFilename(q, ballSize, minPasswordLength, dataset)
+
+		path := filepath.Join(checker, filename)
+
+		file, err := os.Open(path)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		defer file.Close()
+
+		bytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			log.Fatal("unable to unmarshal json")
+		}
+
+		results[checker] = &Result{}
+
+		// get json
+		err = json.Unmarshal(bytes, results[checker])
+		if err != nil {
+			log.Fatal("unable to unmarshal json")
+		}
+	}
+
+	// create plot
+	p, err := plot.New()
+	if err != nil {
+		panic(err)
+	}
+
+	// customize plot
+	p.Title.Text = "Security Loss using Muslim Match"
+	p.X.Label.Text = "Number of guesses allowed"
+	p.Y.Label.Text = "λᵍʳᵉᵉᵈʸᵩ − λᵩ"
+
+	curves := make(map[string]plotter.XYs, len(checkerz))
+	for checker, result := range results {
+		// defender list
+		defenderList := checkers.LoadFrequencyBlacklist(result.DefenderListFile, minPasswordLength)
+
+		// add points
+		step := 100
+		points := make(plotter.XYs, (q / step))
+		for i := step; i < q; i = i + step {
+			guesses := result.GuessList[:i+step]
+			naiveGuesses := result.NaiveGuessList[:i+step]
+			guessListBall := guessListBall(guesses, result.Correctors)
+			lambdaQGreedy := ballProbability(guessListBall, defenderList)
+			lambdaQ := ballProbability(naiveGuesses, defenderList)
+			secloss := (lambdaQGreedy - lambdaQ)
+			fmt.Println("lambda q greedy: ", lambdaQGreedy)
+			fmt.Println("lambda q: ", lambdaQ)
+			fmt.Println("secloss: ", secloss)
+			points[i/step].X = float64(i)
+			points[i/step].Y = secloss
+		}
+		curves[checker] = points
+	}
+
+	// add curves to theplot
+	err = plotutil.AddLinePoints(p,
+		"always", curves["always"],
+		"blacklist", curves["blacklist"],
+		"optimal", curves["optimal"],
+		// "muslim match", curves["muslim"],
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Save the plot to a PNG file.
+	if err := p.Save(4*vg.Inch, 4*vg.Inch, filepath.Join("plots", dataset+".png")); err != nil {
 		panic(err)
 	}
 }
