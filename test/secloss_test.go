@@ -24,7 +24,7 @@ func TestSecLossAlways(t *testing.T) {
 		Typos: map[string]int{
 			"same":          90234,
 			"other":         1918,
-			"swc-al":        169,
+			"swc-all":       1698,
 			"kclose":        1385,
 			"keypress-edit": 1000,
 			"rm-last":       382,
@@ -75,7 +75,7 @@ func TestSecLossBlacklist(t *testing.T) {
 		Typos: map[string]int{
 			"same":          90234,
 			"other":         1918,
-			"swc-al":        169,
+			"swc-all":       1698,
 			"kclose":        1385,
 			"keypress-edit": 1000,
 			"rm-last":       382,
@@ -127,7 +127,7 @@ func TestSecLossOptimal(t *testing.T) {
 		Typos: map[string]int{
 			"same":          90234,
 			"other":         1918,
-			"swc-al":        169,
+			"swc-all":       1698,
 			"kclose":        1385,
 			"keypress-edit": 1000,
 			"rm-last":       382,
