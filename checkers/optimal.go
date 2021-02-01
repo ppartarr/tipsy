@@ -28,21 +28,25 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 
 		// TODO change this to make probs customisable e.g. ngram vs pcfg vs historgram vs pwmodel
 		// only add password to ball if PasswordProbability * typoProbability > 0
-		if PasswordProbability*typoProbability > 0 {
-			ballProbability[passwordInBall] = PasswordProbability * typoProbability
-		}
+		ballProbability[passwordInBall] = PasswordProbability * typoProbability
 	}
 
 	// find the optimal set of passwords in the ball such that aggregate probability of each password in the ball
 	// is lower than the probability of the qth most probable password in the blacklist
-	probabilityOfQthPassword := FindProbabilityOfQthPassword(frequencyBlacklist, q)
-	cutoff := probabilityOfQthPassword - PasswordProbability(submittedPassword, frequencyBlacklist)
+	probabilityOfQthPassword := FindFrequencyOfQthPassword(frequencyBlacklist, q)
+	cutoff := float64(probabilityOfQthPassword) - PasswordProbability(submittedPassword, frequencyBlacklist)
 
 	// get the set of passwords that maximises utility subject to completeness and security
 	combinationToTry := CombinationProbability{}
 	combinationToTry = FindOptimalSubset(ballProbability, cutoff)
 
 	return combinationToTry.Passwords
+}
+
+// FindFrequencyOfQthPassword given the blacklist, find the probability of the qth password in the distribution
+func FindFrequencyOfQthPassword(frequencyBlacklist map[string]int, q int) int {
+	sortedSlice := correctors.ConvertMapToSortedSlice(frequencyBlacklist)
+	return sortedSlice[q].Value
 }
 
 // FindProbabilityOfQthPassword given the blacklist, find the probability of the qth password in the distribution
@@ -116,6 +120,14 @@ func maxProbability(filteredCombinations []CombinationProbability) CombinationPr
 	maxFloat := 0.0
 	for _, filteredCombination := range filteredCombinations {
 		if filteredCombination.Probability != 0.0 && filteredCombination.Probability > maxFloat {
+			// check if probability is the same
+			if filteredCombination.Probability == maxFloat {
+				// use the combinations with fewer passwords
+				if len(filteredCombination.Passwords) < len(maxCombination.Passwords) {
+					maxCombination = filteredCombination
+					maxFloat = filteredCombination.Probability
+				}
+			}
 			maxCombination = filteredCombination
 			maxFloat = filteredCombination.Probability
 		}
