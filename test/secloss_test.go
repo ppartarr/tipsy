@@ -46,21 +46,24 @@ func TestSecLossAlways(t *testing.T) {
 	q := 1000
 	ballSize := 3
 	minPasswordLength := 6
-	attackerListFile := "../data/rockyou-1m-withcount.txt"
-	defenderListFile := "../data/rockyou-1m-withcount.txt"
+	attackerListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
+	// attackerListFile := "../data/muslim-withcount.txt"
+	// defenderListFile := "../data/muslim-withcount.txt"
 
-	// convert results to json
-	result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, defenderListFile)
-	bytes, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		t.Error(err.Error())
-	}
+	for _, attackerListFile := range attackerListFiles {
+		// convert results to json
+		result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, attackerListFile)
+		bytes, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			t.Error(err.Error())
+		}
 
-	// save json to file
-	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
-	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
-	if err != nil {
-		t.Error(err.Error())
+		// save json to file
+		filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(attackerListFile))
+		err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
+		if err != nil {
+			t.Error(err.Error())
+		}
 	}
 }
 
@@ -97,21 +100,24 @@ func TestSecLossBlacklist(t *testing.T) {
 	q := 1000
 	ballSize := 3
 	minPasswordLength := 6
-	attackerListFile := "../data/rockyou-1m-withcount.txt"
-	defenderListFile := "../data/rockyou-1m-withcount.txt"
+	attackerListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
+	// attackerListFile := "../data/muslim-withcount.txt"
+	// defenderListFile := "../data/muslim-withcount.txt"
 
-	// convert results to json
-	result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, defenderListFile)
-	bytes, err := json.MarshalIndent(result, "", "  ")
-	if err != nil {
-		t.Error(err.Error())
-	}
+	for _, attackerListFile := range attackerListFiles {
+		// convert results to json
+		result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, attackerListFile)
+		bytes, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			t.Error(err.Error())
+		}
 
-	// save json to file
-	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
-	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
-	if err != nil {
-		t.Error(err.Error())
+		// save json to file
+		filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(attackerListFile))
+		err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
+		if err != nil {
+			t.Error(err.Error())
+		}
 	}
 }
 
@@ -146,24 +152,76 @@ func TestSecLossOptimal(t *testing.T) {
 	}
 
 	checker := "optimal"
-	q := 1000
+	q := 10
 	ballSize := 3
 	minPasswordLength := 6
-	attackerListFile := "../data/rockyou-1m-withcount.txt"
-	defenderListFile := "../data/rockyou-1m-withcount.txt"
+	attackerListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
+	// TODO comment out for estimating attakcer
+	//defenderListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
 
-	// convert results to json
-	result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, defenderListFile)
-	bytes, err := json.MarshalIndent(result, "", "  ")
+	for _, attackerListFile := range attackerListFiles {
+		// convert results to json
+		result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, attackerListFile)
+		bytes, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		// save json to file
+		filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(attackerListFile))
+		err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
+		if err != nil {
+			t.Error(err.Error())
+		}
+	}
+}
+
+func TestSecLoss(t *testing.T) {
+
+	checker := "optimal"
+	q := 10
+	ballSize := 3
+	minPasswordLength := 6
+	defenderListFile := "../data/muslim-withcount.txt"
+
+	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
+
+	filepath := filepath.Join(checker, filename)
+
+	// open results
+	file, err := os.Open(filepath)
 	if err != nil {
-		t.Error(err.Error())
+		log.Fatal(err.Error())
+	}
+	defer file.Close()
+
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatal("unable to unmarshal json")
 	}
 
-	// save json to file
-	filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(defenderListFile))
-	err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
+	result := &Result{}
+
+	// get json
+	err = json.Unmarshal(bytes, result)
 	if err != nil {
-		t.Error(err.Error())
+		log.Fatal("unable to unmarshal json")
+	}
+
+	defenderList := checkers.LoadFrequencyBlacklist(result.DefenderListFile, minPasswordLength)
+
+	// add points
+	qs := []int{10}
+	for _, rateLimit := range qs {
+		guesses := result.GuessList[:rateLimit]
+		naiveGuesses := result.NaiveGuessList[:rateLimit]
+		guessListBall := guessListBall(guesses, result.Correctors)
+		lambdaQGreedy := ballProbability(guessListBall, defenderList)
+		lambdaQ := ballProbability(naiveGuesses, defenderList)
+		secloss := (lambdaQGreedy - lambdaQ)
+		fmt.Println("lambda q greedy: ", lambdaQGreedy)
+		fmt.Println("lambda q: ", lambdaQ)
+		fmt.Println("secloss: ", secloss)
 	}
 }
 
