@@ -26,7 +26,7 @@ func TestPlot(t *testing.T) {
 	ballSize := 3
 	minPasswordLength := 6
 
-	filename := buildFilename(q, ballSize, minPasswordLength, checker)
+	filename := buildFilename(q, ballSize, minPasswordLength, dataset)
 
 	results := filepath.Join(checker, filename)
 
@@ -100,19 +100,19 @@ func TestPlot(t *testing.T) {
 	}
 }
 
-func TestAlwaysPlot(t *testing.T) {
+func TestPlotChecker(t *testing.T) {
 	// seed randomness
 	rand.Seed(int64(0))
 
 	checker := "always"
-	datasets := []string{"rockyou", "phpbb"}
+	datasets := []string{"rockyou", "phpbb", "muslim"}
 	q := 1000
 	ballSize := 3
 	minPasswordLength := 6
 
 	results := make(map[string]*Result, len(datasets))
 	for _, dataset := range datasets {
-		filename := strconv.Itoa(q) + "-" + strconv.Itoa(ballSize) + "-" + strconv.Itoa(minPasswordLength) + "-" + dataset + ".json"
+		filename := buildFilename(q, ballSize, minPasswordLength, dataset)
 
 		path := filepath.Join(checker, filename)
 
