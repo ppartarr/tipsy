@@ -102,7 +102,7 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 					// add all neighbours of this password to the priority queue
 					for _, password := range killed {
 						probability := checkers.PasswordProbability(registeredPassword, attackerList)
-						neighbours := getNeighbours(password, config.Correctors, config, checker, attackerList, q, blacklist)
+						neighbours := getNeighbours(password, config.Correctors, config, checker, attackerList, blacklist)
 						neighbours = append(neighbours, password)
 						for _, neighbour := range neighbours {
 							// update neighbour weight in the priority queue
@@ -138,7 +138,7 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 			}
 
 			// insert neighbours & password into the priority queue
-			neighbours := getNeighbours(registeredPassword, config.Correctors, config, checker, attackerList, q, blacklist)
+			neighbours := getNeighbours(registeredPassword, config.Correctors, config, checker, attackerList, blacklist)
 			neighbours = append(neighbours, registeredPassword)
 
 			for _, neighbour := range neighbours {
@@ -295,7 +295,7 @@ func remove(slice []string, s string) []string {
 	return nil
 }
 
-func getNeighbours(password string, bestCorrectors []string, conf *config.Server, checker *checkers.Checker, attackerList map[string]int, q int, blacklist []string) []string {
+func getNeighbours(password string, bestCorrectors []string, conf *config.Server, checker *checkers.Checker, attackerList map[string]int, blacklist []string) []string {
 	neighbours := make([]string, 0)
 	for _, corrector := range bestCorrectors {
 		edits := make([]string, 0)
@@ -312,7 +312,7 @@ func getNeighbours(password string, bestCorrectors []string, conf *config.Server
 				}
 			}
 		} else if conf.Checker.Optimal != nil {
-			edits = CheckInverseOptimal(password, attackerList, q, checker)
+			edits = CheckInverseOptimal(password, attackerList, conf.Checker.Optimal.QthMostProbablePassword, checker)
 		}
 
 		edits = correctors.ApplyInverseCorrectionFunction(corrector, password)
