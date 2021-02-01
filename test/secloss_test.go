@@ -152,7 +152,7 @@ func TestSecLossOptimal(t *testing.T) {
 	}
 
 	checker := "optimal"
-	q := 10
+	q := 1000
 	ballSize := 3
 	minPasswordLength := 6
 	attackerListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
