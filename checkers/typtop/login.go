@@ -91,7 +91,7 @@ func (checker *Checker) valid(password string, typo string) bool {
 
 	// TODO make this configurable
 	distance := edlib.DamerauLevenshteinDistance(password, typo)
-	if distance <= checker.config.EditDistance {
+	if distance > checker.config.EditDistance {
 		log.Println("damereau levenshtein distance is too large")
 		return false
 	}
