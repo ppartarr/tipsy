@@ -27,15 +27,15 @@ type Result struct {
 	Correctors       []string
 }
 
-func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswordLength int, attackerListFile, defenderListFile string) *Result {
+func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, attackerListFile, defenderListFile string) *Result {
 
 	// init checker
 	checker := checkers.NewChecker(config.Typos, config.Correctors)
 
 	// sample from password leaks
 	now := time.Now()
-	defenderList := checkers.LoadFrequencyBlacklist(defenderListFile, minPasswordLength)
-	attackerList := checkers.LoadFrequencyBlacklist(attackerListFile, minPasswordLength)
+	defenderList := checkers.LoadFrequencyBlacklist(defenderListFile, config.MinPasswordLength)
+	attackerList := checkers.LoadFrequencyBlacklist(attackerListFile, config.MinPasswordLength)
 	fmt.Println(time.Since(now))
 	now = time.Now()
 
@@ -60,7 +60,7 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, minPasswo
 			registeredPassword := sortedAttackerList[defenderListIndex].Key
 
 			// check that it's longer than 6 chars
-			if len(registeredPassword) < minPasswordLength {
+			if len(registeredPassword) < config.MinPasswordLength {
 				defenderListIndex++
 				continue
 			}

@@ -39,7 +39,8 @@ func TestSecLossAlways(t *testing.T) {
 			"add1-last":     5,
 		},
 
-		Correctors: []string{"swc-all", "rm-last", "swc-first"},
+		Correctors:        []string{"swc-all", "rm-last", "swc-first"},
+		MinPasswordLength: 8,
 	}
 
 	checker := "always"
@@ -52,7 +53,7 @@ func TestSecLossAlways(t *testing.T) {
 
 	for _, attackerListFile := range attackerListFiles {
 		// convert results to json
-		result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, attackerListFile)
+		result := greedyMaxCoverageHeap(server, q, ballSize, attackerListFile, attackerListFile)
 		bytes, err := json.MarshalIndent(result, "", "  ")
 		if err != nil {
 			t.Error(err.Error())
@@ -93,7 +94,8 @@ func TestSecLossBlacklist(t *testing.T) {
 			"add1-last":     5,
 		},
 
-		Correctors: []string{"swc-all", "rm-last", "swc-first"},
+		Correctors:        []string{"swc-all", "rm-last", "swc-first"},
+		MinPasswordLength: 8,
 	}
 
 	checker := "blacklist"
@@ -106,7 +108,7 @@ func TestSecLossBlacklist(t *testing.T) {
 
 	for _, attackerListFile := range attackerListFiles {
 		// convert results to json
-		result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, attackerListFile)
+		result := greedyMaxCoverageHeap(server, q, ballSize, attackerListFile, attackerListFile)
 		bytes, err := json.MarshalIndent(result, "", "  ")
 		if err != nil {
 			t.Error(err.Error())
@@ -148,7 +150,8 @@ func TestSecLossOptimal(t *testing.T) {
 			"add1-last":     5,
 		},
 
-		Correctors: []string{"swc-all", "rm-last", "swc-first"},
+		Correctors:        []string{"swc-all", "rm-last", "swc-first"},
+		MinPasswordLength: 8,
 	}
 
 	checker := "optimal"
@@ -161,7 +164,7 @@ func TestSecLossOptimal(t *testing.T) {
 
 	for _, attackerListFile := range attackerListFiles {
 		// convert results to json
-		result := greedyMaxCoverageHeap(server, q, ballSize, minPasswordLength, attackerListFile, attackerListFile)
+		result := greedyMaxCoverageHeap(server, q, ballSize, attackerListFile, attackerListFile)
 		bytes, err := json.MarshalIndent(result, "", "  ")
 		if err != nil {
 			t.Error(err.Error())
