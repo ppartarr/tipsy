@@ -46,7 +46,6 @@ func TestSecLossAlways(t *testing.T) {
 	checker := "always"
 	q := 1000
 	ballSize := 3
-	minPasswordLength := 6
 	attackerListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
 	// attackerListFile := "../data/muslim-withcount.txt"
 	// defenderListFile := "../data/muslim-withcount.txt"
@@ -60,7 +59,7 @@ func TestSecLossAlways(t *testing.T) {
 		}
 
 		// save json to file
-		filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(attackerListFile))
+		filename := buildFilename(q, ballSize, server.MinPasswordLength, getDatasetFromFilename(attackerListFile))
 		err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 		if err != nil {
 			t.Error(err.Error())
@@ -101,7 +100,6 @@ func TestSecLossBlacklist(t *testing.T) {
 	checker := "blacklist"
 	q := 1000
 	ballSize := 3
-	minPasswordLength := 6
 	attackerListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
 	// attackerListFile := "../data/muslim-withcount.txt"
 	// defenderListFile := "../data/muslim-withcount.txt"
@@ -115,7 +113,7 @@ func TestSecLossBlacklist(t *testing.T) {
 		}
 
 		// save json to file
-		filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(attackerListFile))
+		filename := buildFilename(q, ballSize, server.MinPasswordLength, getDatasetFromFilename(attackerListFile))
 		err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 		if err != nil {
 			t.Error(err.Error())
@@ -157,7 +155,6 @@ func TestSecLossOptimal(t *testing.T) {
 	checker := "optimal"
 	q := 1000
 	ballSize := 3
-	minPasswordLength := 6
 	attackerListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
 	// TODO comment out for estimating attakcer
 	//defenderListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
@@ -171,7 +168,7 @@ func TestSecLossOptimal(t *testing.T) {
 		}
 
 		// save json to file
-		filename := buildFilename(q, ballSize, minPasswordLength, getDatasetFromFilename(attackerListFile))
+		filename := buildFilename(q, ballSize, server.MinPasswordLength, getDatasetFromFilename(attackerListFile))
 		err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
 		if err != nil {
 			t.Error(err.Error())
