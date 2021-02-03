@@ -2,12 +2,11 @@
 
 The passwords lists were taken from this seclist repo [1]
 
-name | lines
------|------
-rock-you | 14m
-php bb | 184k
-muslim match | 95k
-my space | 37k
+name | lines | len > 8 | prob of picking most likely password len > 8
+-----|-------|---------|----|
+rock-you | 14m | 6 241 919 | 0.012302146182928679 (123456789)
+php bb | 184k | 116 162 | 0.010709182004442073 (password)
+muslim match | 95k | 105 931 | 0.016982752924073218 (pakistan)
 
 
 14m = 9h20
