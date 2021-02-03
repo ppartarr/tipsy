@@ -167,8 +167,11 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, attackerL
 		}
 	}
 
-	guessListBall := guessListBall(guessList, config.Correctors)
-	log.Println(guessListBall)
+	guessListBall := make([]string, 0)
+	for _, password := range guessList {
+		union := unionBall(password, config, checker, attackerList, blacklist)
+		guessListBall = append(guessListBall, union...)
+	}
 
 	lambdaQGreedy := ballProbability(guessListBall, defenderList)
 	lambdaQ := ballProbability(naiveGuessList, defenderList)
@@ -198,7 +201,7 @@ func guessListBall(guessList []string, corrections []string) []string {
 
 	for _, password := range guessList {
 		// get ball of passwords in guess list
-		// ball := unionBall(password, done, config, checker, attackerList, q, blacklist)
+		// ball := unionBall(password, config, checker, attackerList, q, blacklist)
 		ball := correctors.GetBall(password, corrections)
 		ball = append(ball, password)
 		guessListBall = append(guessListBall, ball...)
@@ -234,8 +237,8 @@ func ballProbability(ball Ball, frequencies map[string]int) float64 {
 	return ballProbability
 }
 
-// returns the union ball of passwords
-func unionBall(password string, done map[string]bool, config *config.Server, checker *checkers.Checker, attackerList map[string]int, blacklist []string) []string {
+// returns the union ball of passwords for checking
+func unionBall(password string, config *config.Server, checker *checkers.Checker, attackerList map[string]int, blacklist []string) []string {
 	// TODO make get ball configurable according to the checker
 	unionBall := make([]string, 0)
 
@@ -259,7 +262,7 @@ func unionBall(password string, done map[string]bool, config *config.Server, che
 func unionBallNotDone(password string, done map[string]bool, config *config.Server, checker *checkers.Checker, attackerList map[string]int, blacklist []string) []string {
 	// TODO make get ball configurable according to the checker
 	unionBallNotDone := make([]string, 0)
-	temp := unionBall(password, done, config, checker, attackerList, blacklist)
+	temp := unionBall(password, config, checker, attackerList, blacklist)
 
 	// check if passwords are in done
 	for _, str := range temp {
