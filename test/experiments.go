@@ -171,6 +171,7 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, attackerL
 	for _, password := range guessList {
 		union := unionBall(password, config, checker, attackerList, blacklist)
 		guessListBall = append(guessListBall, union...)
+		guessListBall = append(guessListBall, password)
 	}
 
 	lambdaQGreedy := ballProbability(guessListBall, defenderList)
