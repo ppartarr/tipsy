@@ -13,6 +13,7 @@ import (
 
 	"github.com/ppartarr/tipsy/checkers"
 	"github.com/ppartarr/tipsy/config"
+	"github.com/ppartarr/tipsy/correctors"
 )
 
 func TestSecLossAlways(t *testing.T) {
@@ -39,7 +40,7 @@ func TestSecLossAlways(t *testing.T) {
 			"add1-last":     5,
 		},
 
-		Correctors:        []string{"swc-all", "rm-last", "swc-first"},
+		Correctors:        []string{correctors.SwitchAll, correctors.RemoveLast, correctors.SwitchFirst},
 		MinPasswordLength: 8,
 	}
 
@@ -93,7 +94,7 @@ func TestSecLossBlacklist(t *testing.T) {
 			"add1-last":     5,
 		},
 
-		Correctors:        []string{"swc-all", "rm-last", "swc-first"},
+		Correctors:        []string{correctors.SwitchAll, correctors.RemoveLast, correctors.SwitchFirst},
 		MinPasswordLength: 8,
 	}
 
@@ -148,7 +149,7 @@ func TestSecLossOptimal(t *testing.T) {
 			"add1-last":     5,
 		},
 
-		Correctors:        []string{"swc-all", "rm-last", "swc-first"},
+		Correctors:        []string{correctors.SwitchAll, correctors.RemoveLast, correctors.SwitchFirst},
 		MinPasswordLength: 8,
 	}
 

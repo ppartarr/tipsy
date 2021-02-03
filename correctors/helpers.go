@@ -5,31 +5,58 @@ import (
 	"sort"
 )
 
+// Corrector constants
+const (
+	SwitchAll          = "swc-all"
+	RemoveLast         = "rm-last"
+	SwitchFirst        = "swc-first"
+	RemoveFirst        = "rm-first"
+	SwitchLast         = "sws-last1"
+	SwitchLastN        = "sws-lastn"
+	UpperNCapital      = "upncap"
+	NumberToSymbolLast = "n2s-last"
+	Capital2Upper      = "cap2up"
+	AddOneLast         = "add1-last"
+)
+
+var allCorrectors = []string{
+	SwitchAll,
+	RemoveLast,
+	SwitchFirst,
+	RemoveFirst,
+	SwitchLast,
+	SwitchLastN,
+	UpperNCapital,
+	NumberToSymbolLast,
+	Capital2Upper,
+	AddOneLast,
+}
+
 // ApplyCorrectionFunction applies the appropriate corrector function given it's config name
 func ApplyCorrectionFunction(corrector string, password string) string {
 	// log.Println(corrector)
 	// log.Println(password)
 
 	switch corrector {
-	case "swc-all":
+	case SwitchAll:
 		return SwitchCaseAll(password)
-	case "rm-last":
+	case RemoveLast:
 		return RemoveLastChar(password)
-	case "swc-first":
+	case SwitchFirst:
 		return SwitchCaseFirstLetter(password)
-	case "rm-first":
+	case RemoveFirst:
 		return RemoveFirstChar(password)
-	case "sws-last1":
+	case SwitchLast:
 		return SwitchShiftLastCharacter(password)
-	case "sws-lastn":
+	case SwitchLastN:
 		return SwitchShiftLastNCharacters(password, 2)
-	case "upncap":
+	case UpperNCapital:
 		return UpperToCapital(password)
-	case "n2s-last":
+	case NumberToSymbolLast:
 		return ConvertLastNumberToSymbol(password)
-	case "cap2up":
+	case Capital2Upper:
 		return CapitalToUpper(password)
-	case "add1-last":
+	case AddOneLast:
 		return AppendOne(password)
 	}
 
@@ -42,31 +69,31 @@ func ApplyInverseCorrectionFunction(corrector string, password string) []string 
 	inverse := make([]string, 1)
 
 	switch corrector {
-	case "swc-all":
+	case SwitchAll:
 		inverse = append(inverse, SwitchCaseAll(password))
-	case "rm-last":
+	case RemoveLast:
 		edits := InverseRemoveLast(password)
 		for _, edit := range edits {
 			inverse = append(inverse, edit)
 		}
-	case "swc-first":
+	case SwitchFirst:
 		inverse = append(inverse, SwitchCaseFirstLetter(password))
-	case "rm-first":
+	case RemoveFirst:
 		edits := InverseRemoveFirst(password)
 		for _, edit := range edits {
 			inverse = append(inverse, edit)
 		}
-	case "sws-last1":
+	case SwitchLast:
 		inverse = append(inverse, SwitchShiftLastCharacter(password))
-	case "sws-lastn":
+	case SwitchLastN:
 		inverse = append(inverse, SwitchShiftLastNCharacters(password, 2))
-	case "upncap":
+	case UpperNCapital:
 		inverse = append(inverse, UpperToCapital(password))
-	case "n2s-last":
+	case NumberToSymbolLast:
 		inverse = append(inverse, ConvertLastSymbolToNumber(password))
-	case "cap2up":
+	case Capital2Upper:
 		inverse = append(inverse, CapitalToUpper(password))
-	case "add1-last":
+	case AddOneLast:
 		inverse = append(inverse, RemoveLastChar(password))
 	}
 
@@ -165,19 +192,6 @@ func StringInSlice(s string, list []string) bool {
 		}
 	}
 	return success
-}
-
-var allCorrectors = []string{
-	"swc-all",
-	"rm-last",
-	"swc-first",
-	"rm-first",
-	"sws-last1",
-	"sws-lastn",
-	"upncap",
-	"n2s-last",
-	"cap2up",
-	"add1-last",
 }
 
 // Keyboard layout dependent

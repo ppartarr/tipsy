@@ -3,6 +3,7 @@ package checkers
 import (
 	"testing"
 
+	"github.com/ppartarr/tipsy/correctors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +25,7 @@ var testTypos = map[string]int{
 	"add1-last":     5,
 }
 
-var topCorrectors = []string{"swc-all", "rm-last", "swc-first"}
+var topCorrectors = []string{correctors.SwitchAll, correctors.RemoveLast, correctors.SwitchFirst}
 
 func TestCheckAlways(t *testing.T) {
 	checker := NewChecker(testTypos, topCorrectors)
