@@ -145,12 +145,13 @@ func PasswordProbability(password string, frequencies map[string]int) float64 {
 	probability, ok := frequencies[password]
 
 	if ok {
-		return float64(probability) / float64(totalNumberOfPasswords(frequencies))
+		return float64(probability) / float64(TotalNumberOfPasswords(frequencies))
 	}
 	return 0
 }
 
-func totalNumberOfPasswords(frequencies map[string]int) int {
+// TotalNumberOfPasswords returns the total number of passwords
+func TotalNumberOfPasswords(frequencies map[string]int) int {
 	sum := 0
 	for _, frequency := range frequencies {
 		sum += frequency
