@@ -48,10 +48,13 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, attackerL
 		sortedAttackerList     = correctors.ConvertMapToSortedSlice(attackerList)
 		defenderListIndex  int = 0
 		blacklist          []string
+		optimal            map[string]int
 	)
 
 	if config.Checker.Blacklist != nil {
 		blacklist = checkers.LoadBlacklist(config.Checker.Blacklist.File)
+	} else if config.Checker.Optimal != nil {
+		optimal = checkers.LoadFrequencyBlacklist(config.Checker.Optimal.File, config.MinPasswordLength)
 	}
 
 	for len(guessList) < q {
@@ -146,7 +149,7 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, attackerL
 
 				// don't add neighbour if it's already in the priority queue or if it has already been processed
 				if priorityQueue.Find(neighbour) == nil && !ok {
-					weight := power(neighbour, attackerList, done, config, checker, blacklist)
+					weight := power(neighbour, attackerList, done, config, checker, blacklist, optimal)
 					item := &Item{
 						value:  neighbour,
 						weight: -weight,
@@ -239,7 +242,7 @@ func ballProbability(ball Ball, frequencies map[string]int) float64 {
 }
 
 // returns the union ball of passwords for checking
-func unionBall(password string, config *config.Server, checker *checkers.Checker, attackerList map[string]int, blacklist []string) []string {
+func unionBall(password string, config *config.Server, checker *checkers.Checker, optimal map[string]int, blacklist []string) []string {
 	// TODO make get ball configurable according to the checker
 	unionBall := make([]string, 0)
 
@@ -252,7 +255,7 @@ func unionBall(password string, config *config.Server, checker *checkers.Checker
 		unionBall = checker.CheckBlacklist(password, blacklist)
 	} else if config.Checker.Optimal != nil {
 		// log.Println("optimal")
-		unionBall = checker.CheckOptimal(password, attackerList, config.Checker.Optimal.QthMostProbablePassword)
+		unionBall = checker.CheckOptimal(password, optimal, config.Checker.Optimal.QthMostProbablePassword)
 	}
 
 	// check if passwords are in done
@@ -260,10 +263,10 @@ func unionBall(password string, config *config.Server, checker *checkers.Checker
 }
 
 // returns the union ball of passwords that are not in the done list
-func unionBallNotDone(password string, done map[string]bool, config *config.Server, checker *checkers.Checker, attackerList map[string]int, blacklist []string) []string {
+func unionBallNotDone(password string, done map[string]bool, config *config.Server, checker *checkers.Checker, optimal map[string]int, blacklist []string) []string {
 	// TODO make get ball configurable according to the checker
 	unionBallNotDone := make([]string, 0)
-	temp := unionBall(password, config, checker, attackerList, blacklist)
+	temp := unionBall(password, config, checker, optimal, blacklist)
 
 	// check if passwords are in done
 	for _, str := range temp {
@@ -278,11 +281,13 @@ func unionBallNotDone(password string, done map[string]bool, config *config.Serv
 	return unionBallNotDone
 }
 
-func power(password string, attackerList map[string]int, done map[string]bool, config *config.Server, checker *checkers.Checker, blacklist []string) float64 {
+// TODO fix power function
+func power(password string, attackerList map[string]int, done map[string]bool, config *config.Server, checker *checkers.Checker, blacklist []string, optimal map[string]int) float64 {
 	probability := 0.0
 
 	// add passwords in ball to done
-	unionBall := unionBallNotDone(password, done, config, checker, attackerList, blacklist)
+	unionBall := unionBallNotDone(password, done, config, checker, optimal, blacklist)
+	// fmt.Println("unionball not done", unionBall)
 
 	for _, pw := range unionBall {
 		probability += checkers.PasswordProbability(pw, attackerList)
