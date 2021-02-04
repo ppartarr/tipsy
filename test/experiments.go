@@ -48,10 +48,13 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, attackerL
 		sortedAttackerList     = correctors.ConvertMapToSortedSlice(attackerList)
 		defenderListIndex  int = 0
 		blacklist          []string
+		optimal            map[string]int
 	)
 
 	if config.Checker.Blacklist != nil {
 		blacklist = checkers.LoadBlacklist(config.Checker.Blacklist.File)
+	} else if config.Checker.Optimal != nil {
+		optimal = checkers.LoadFrequencyBlacklist(config.Checker.Optimal.File, config.MinPasswordLength)
 	}
 
 	for len(guessList) < q {
@@ -146,7 +149,7 @@ func greedyMaxCoverageHeap(config *config.Server, q int, ballSize int, attackerL
 
 				// don't add neighbour if it's already in the priority queue or if it has already been processed
 				if priorityQueue.Find(neighbour) == nil && !ok {
-					weight := power(neighbour, attackerList, done, config, checker, blacklist)
+					weight := power(neighbour, attackerList, done, config, checker, blacklist, optimal)
 					item := &Item{
 						value:  neighbour,
 						weight: -weight,
@@ -239,7 +242,7 @@ func ballProbability(ball Ball, frequencies map[string]int) float64 {
 }
 
 // returns the union ball of passwords for checking
-func unionBall(password string, config *config.Server, checker *checkers.Checker, attackerList map[string]int, blacklist []string) []string {
+func unionBall(password string, config *config.Server, checker *checkers.Checker, optimal map[string]int, blacklist []string) []string {
 	// TODO make get ball configurable according to the checker
 	unionBall := make([]string, 0)
 
@@ -252,7 +255,7 @@ func unionBall(password string, config *config.Server, checker *checkers.Checker
 		unionBall = checker.CheckBlacklist(password, blacklist)
 	} else if config.Checker.Optimal != nil {
 		// log.Println("optimal")
-		unionBall = checker.CheckOptimal(password, attackerList, config.Checker.Optimal.QthMostProbablePassword)
+		unionBall = checker.CheckOptimal(password, optimal, config.Checker.Optimal.QthMostProbablePassword)
 	}
 
 	// check if passwords are in done
@@ -260,10 +263,10 @@ func unionBall(password string, config *config.Server, checker *checkers.Checker
 }
 
 // returns the union ball of passwords that are not in the done list
-func unionBallNotDone(password string, done map[string]bool, config *config.Server, checker *checkers.Checker, attackerList map[string]int, blacklist []string) []string {
+func unionBallNotDone(password string, done map[string]bool, config *config.Server, checker *checkers.Checker, optimal map[string]int, blacklist []string) []string {
 	// TODO make get ball configurable according to the checker
 	unionBallNotDone := make([]string, 0)
-	temp := unionBall(password, config, checker, attackerList, blacklist)
+	temp := unionBall(password, config, checker, optimal, blacklist)
 
 	// check if passwords are in done
 	for _, str := range temp {
@@ -278,11 +281,13 @@ func unionBallNotDone(password string, done map[string]bool, config *config.Serv
 	return unionBallNotDone
 }
 
-func power(password string, attackerList map[string]int, done map[string]bool, config *config.Server, checker *checkers.Checker, blacklist []string) float64 {
+// TODO fix power function
+func power(password string, attackerList map[string]int, done map[string]bool, config *config.Server, checker *checkers.Checker, blacklist []string, optimal map[string]int) float64 {
 	probability := 0.0
 
 	// add passwords in ball to done
-	unionBall := unionBallNotDone(password, done, config, checker, attackerList, blacklist)
+	unionBall := unionBallNotDone(password, done, config, checker, optimal, blacklist)
+	// fmt.Println("unionball not done", unionBall)
 
 	for _, pw := range unionBall {
 		probability += checkers.PasswordProbability(pw, attackerList)
@@ -335,51 +340,4 @@ func convertMapToSlice(in map[string]int) []string {
 	}
 
 	return ss
-}
-
-// CheckInverseOptimal use the given distribution of passwords and a distribution of typos to decide whether to correct the typo or not
-func CheckInverseOptimal(submittedPassword string, frequencyBlacklist map[string]int, q int, checker *checkers.Checker) []string {
-
-	var ball map[string]string = getInverseBallWithCorrectionType(submittedPassword, checker.Correctors)
-	var ballProbability = make(map[string]float64)
-
-	for passwordInBall, correctionType := range ball {
-		// probability of guessing the password in the ball from the blacklist
-		PasswordProbability := checkers.PasswordProbability(passwordInBall, frequencyBlacklist)
-
-		// probability that the user made the user made the typo associated to the correction e.g. swc-all
-		typoProbability := checker.CalculateTypoProbability(correctionType)
-
-		// TODO change this to make probs customisable e.g. ngram vs pcfg vs historgram vs pwmodel
-		// only add password to ball if PasswordProbability * typoProbability > 0
-		if PasswordProbability*typoProbability > 0 {
-			ballProbability[passwordInBall] = PasswordProbability * typoProbability
-		}
-	}
-
-	// find the optimal set of passwords in the ball such that aggregate probability of each password in the ball
-	// is lower than the probability of the qth most probable password in the blacklist
-	probabilityOfQthPassword := checkers.FindProbabilityOfQthPassword(frequencyBlacklist, q)
-	cutoff := float64(probabilityOfQthPassword) - checkers.PasswordProbability(submittedPassword, frequencyBlacklist)
-
-	// get the set of passwords that maximises utility subject to completeness and security
-	combinationToTry := checkers.CombinationProbability{}
-	combinationToTry = checkers.FindOptimalSubset(ballProbability, cutoff)
-
-	return combinationToTry.Passwords
-}
-
-func getInverseBallWithCorrectionType(password string, corrections []string) map[string]string {
-	var ballWithCorrectorName = make(map[string]string)
-
-	for _, corrector := range corrections {
-		correctedPasswords := correctors.ApplyInverseCorrectionFunction(corrector, password)
-		for _, correctedPassword := range correctedPasswords {
-			if correctedPassword != password {
-				ballWithCorrectorName[correctedPassword] = corrector
-			}
-		}
-	}
-
-	return ballWithCorrectorName
 }

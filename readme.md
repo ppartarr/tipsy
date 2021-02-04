@@ -41,7 +41,9 @@ go test -v -run TestPlot
 
 
 ## Links
-* seclists https://github.com/danielmiessler/SecLists/tree/master/Passwords/Leaked-Databases
+* password lists
+    * https://github.com/danielmiessler/SecLists/tree/master/Passwords/Leaked-Databases
+    * https://github.com/berzerk0/Probable-Wordlists/tree/master/Real-Passwords
 * OPAQUE implementations
     * https://github.com/schollz/pake
     * https://github.com/cretz/gopaque
