@@ -9,11 +9,11 @@ import (
 
 // State represents the server state in Chatterjee et al. typo correction paper
 type State struct {
-	Publickey          *rsa.PublicKey
-	CipheredCacheState []byte
-	TypoCache          [][]byte
-	WaitList           [][]byte
-	gamma              int
+	Publickey          *rsa.PublicKey `json:"publicKey"`
+	CipheredCacheState []byte         `json:"cipheredCacheState"`
+	TypoCache          [][]byte       `json:"typoCache"`
+	WaitList           [][]byte       `json:"waitList"`
+	Gamma              int            `json:"gamma"`
 }
 
 // Register initialises the user's state
@@ -64,7 +64,7 @@ func (checker *Checker) Register(password string) (state *State, privateKey *rsa
 		CipheredCacheState: encryptedCacheState,
 		TypoCache:          typoCache,
 		WaitList:           waitList,
-		gamma:              int(gamma.Int64()),
+		Gamma:              int(gamma.Int64()),
 	}
 
 	return state, privateKey

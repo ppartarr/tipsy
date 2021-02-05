@@ -69,10 +69,10 @@ func (checker *Checker) Login(state *State, submittedPassword string, privateKey
 
 	if !success {
 		// add typo to wait list
-		state.WaitList[state.gamma] = RSAEncrypt(&privateKey.PublicKey, []byte(submittedPassword))
+		state.WaitList[state.Gamma] = RSAEncrypt(&privateKey.PublicKey, []byte(submittedPassword))
 
 		// increment gamma
-		state.gamma = state.gamma + 1%len(state.WaitList)
+		state.Gamma = state.Gamma + 1%len(state.WaitList)
 	}
 
 	return success, state
