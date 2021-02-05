@@ -1,0 +1,36 @@
+{
+  "GuessList": [
+    "1234567",
+    "pakistani",
+    "123456789",
+    "password1",
+    "bismillah",
+    "muslims",
+    "7867864",
+    "qwerty1",
+    "1111111",
+    "iloveyou"
+  ],
+  "NaiveGuessList": [
+    "123456",
+    "pakistan",
+    "password",
+    "12345678",
+    "123456789",
+    "bismillah",
+    "786786",
+    "muslim",
+    "1234567",
+    "qwerty"
+  ],
+  "LambdaQ": 0.05697150776962699,
+  "LambdaQGreedy": 0.06140574334972605,
+  "SecLoss": 0.004434235580099061,
+  "AttackerListFile": "../data/muslim-withcount.txt",
+  "DefenderListFile": "../data/muslim-withcount.txt",
+  "Correctors": [
+    "swc-all",
+    "rm-last",
+    "swc-first"
+  ]
+}
