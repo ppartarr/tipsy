@@ -210,19 +210,125 @@ func TestSecLoss(t *testing.T) {
 	}
 
 	defenderList := checkers.LoadFrequencyBlacklist(result.DefenderListFile, minPasswordLength)
+	blacklist := checkers.LoadBlacklist(server.Checker.Blacklist.File)
 
 	// add points
 	qs := []int{10}
 	for _, rateLimit := range qs {
 		guesses := result.GuessList[:rateLimit]
 		naiveGuesses := result.NaiveGuessList[:rateLimit]
-		guessListBall := guessListBall(guesses, result.Correctors)
+
+		// init checker
+		checker := checkers.NewChecker(server.Typos, server.Correctors)
+
+		guessListBall := make([]string, 0)
+		for _, password := range guesses {
+
+			union := unionBall(password, server, checker, defenderList, blacklist)
+			guessListBall = append(guessListBall, union...)
+			guessListBall = append(guessListBall, password)
+		}
+		fmt.Println(guessListBall)
+
 		lambdaQGreedy := ballProbability(guessListBall, defenderList)
 		lambdaQ := ballProbability(naiveGuesses, defenderList)
 		secloss := (lambdaQGreedy - lambdaQ)
+		fmt.Println(rateLimit)
 		fmt.Println("lambda q greedy: ", lambdaQGreedy)
 		fmt.Println("lambda q: ", lambdaQ)
 		fmt.Println("secloss: ", secloss)
+	}
+}
+
+func TestSecLossDataset(t *testing.T) {
+	checkerz := []string{"always", "blacklist", "optimal"}
+	q := 1000
+	ballSize := 3
+	attackerListFile := "../data/phpbb-withcount.txt"
+	// TODO comment out for estimating attakcer
+	//defenderListFiles := []string{"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt", "../data/phpbb-withcount.txt"}
+
+	for _, checker := range checkerz {
+		var server *config.Server
+		switch checker {
+		case "always":
+			server = getAlwaysConfig()
+		case "blacklist":
+			server = getBlacklistConfig("../data/rockyou-1k.txt")
+		case "optimal":
+			server = getOptimalConfig("../data/rockyou-1k-withcount.txt", q)
+		}
+		fmt.Println("running secloss optimal for", attackerListFile)
+		// convert results to json
+		result := greedyMaxCoverageHeap(server, q, ballSize, attackerListFile, attackerListFile)
+		bytes, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		// save json to file
+		filename := buildFilename(q, ballSize, server.MinPasswordLength, getDatasetFromFilename(attackerListFile))
+		err = ioutil.WriteFile(filepath.Join(checker, filename), bytes, 0666)
+		if err != nil {
+			t.Error(err.Error())
+		}
+	}
+}
+
+func TestSecLossDatasets(t *testing.T) {
+	checkerz := []string{"always", "blacklist", "optimal"}
+	q := 10
+	ballSize := 3
+	attackerDefenderListFiles := map[string][]string{
+		"../data/rockyou-1m-withcount.txt": {"../data/phpbb-withcount.txt", "../data/muslim-withcount.txt"},
+		"../data/muslim-withcount.txt":     {"../data/phpbb-withcount.txt", "../data/rockyou-1m-withcount.txt"},
+		"../data/phpbb-withcount.txt":      {"../data/muslim-withcount.txt", "../data/rockyou-1m-withcount.txt"},
+	}
+
+	for attackerFile, defenderList := range attackerDefenderListFiles {
+		for _, defenderFile := range defenderList {
+
+			for _, checker := range checkerz {
+				var server *config.Server
+
+				switch checker {
+				case "always":
+					server = getAlwaysConfig()
+				case "blacklist":
+
+					if defenderFile == "../data/rockyou-1m-withcount.txt" {
+						server = getBlacklistConfig("../data/rockyou-1k.txt")
+					} else if defenderFile == "../data/phpbb-withcount.txt" {
+						server = getBlacklistConfig("../data/phpbb-1k.txt")
+					} else if defenderFile == "../data/muslim-withcount.txt" {
+						server = getBlacklistConfig("../data/muslim-1k.txt")
+					}
+
+				case "optimal":
+					if defenderFile == "../data/rockyou-1m-withcount.txt" {
+						server = getOptimalConfig("../data/rockyou-1k-withcount.txt", q)
+					} else if defenderFile == "../data/phpbb-withcount.txt" {
+						server = getOptimalConfig("../data/phpbb-1k-withcount.txt", q)
+					} else if defenderFile == "../data/muslim-withcount.txt" {
+						server = getOptimalConfig("../data/muslim-1k-withcount.txt", q)
+					}
+				}
+				fmt.Println("running secloss optimal for attacker", attackerFile, "and defender", defenderFile)
+				// convert results to json
+				result := greedyMaxCoverageHeap(server, q, ballSize, attackerFile, defenderFile)
+				bytes, err := json.MarshalIndent(result, "", "  ")
+				if err != nil {
+					t.Error(err.Error())
+				}
+
+				// save json to file
+				filename := buildFilename(q, ballSize, server.MinPasswordLength, getDatasetFromFilename(defenderFile))
+				err = ioutil.WriteFile(filepath.Join("estimating", checker, filename), bytes, 0666)
+				if err != nil {
+					t.Error(err.Error())
+				}
+			}
+		}
 	}
 }
 
@@ -234,4 +340,90 @@ func getDatasetFromFilename(filename string) string {
 	slice := strings.Split(filename, "/")
 	slice = strings.Split(slice[len(slice)-1], "-")
 	return slice[0]
+}
+
+func getAlwaysConfig() *config.Server {
+	return &config.Server{
+		Checker: &config.Checker{
+			Always: true,
+		},
+		Typos: map[string]int{
+			"same":          90234,
+			"other":         1918,
+			"swc-all":       1698,
+			"kclose":        1385,
+			"keypress-edit": 1000,
+			"rm-last":       382,
+			"swc-first":     209,
+			"rm-first":      55,
+			"sws-last":      19,
+			"tcerror":       18,
+			"sws-lastn":     14,
+			"upncap":        13,
+			"n2s-last":      9,
+			"cap2up":        5,
+			"add1-last":     5,
+		},
+		Correctors:        []string{correctors.SwitchAll, correctors.RemoveLast, correctors.SwitchFirst},
+		MinPasswordLength: 8,
+	}
+}
+
+func getBlacklistConfig(blacklist string) *config.Server {
+	return &config.Server{
+		Checker: &config.Checker{
+			Blacklist: &config.BlacklistChecker{
+				File: blacklist,
+			},
+		},
+		Typos: map[string]int{
+			"same":          90234,
+			"other":         1918,
+			"swc-all":       1698,
+			"kclose":        1385,
+			"keypress-edit": 1000,
+			"rm-last":       382,
+			"swc-first":     209,
+			"rm-first":      55,
+			"sws-last":      19,
+			"tcerror":       18,
+			"sws-lastn":     14,
+			"upncap":        13,
+			"n2s-last":      9,
+			"cap2up":        5,
+			"add1-last":     5,
+		},
+		Correctors:        []string{correctors.SwitchAll, correctors.RemoveLast, correctors.SwitchFirst},
+		MinPasswordLength: 8,
+	}
+}
+
+func getOptimalConfig(optimal string, q int) *config.Server {
+	return &config.Server{
+		Checker: &config.Checker{
+			Optimal: &config.OptimalChecker{
+				File:                    optimal,
+				QthMostProbablePassword: q,
+			},
+		},
+		Typos: map[string]int{
+			"same":          90234,
+			"other":         1918,
+			"swc-all":       1698,
+			"kclose":        1385,
+			"keypress-edit": 1000,
+			"rm-last":       382,
+			"swc-first":     209,
+			"rm-first":      55,
+			"sws-last":      19,
+			"tcerror":       18,
+			"sws-lastn":     14,
+			"upncap":        13,
+			"n2s-last":      9,
+			"cap2up":        5,
+			"add1-last":     5,
+		},
+		Correctors:        []string{correctors.SwitchAll, correctors.RemoveLast, correctors.SwitchFirst},
+		MinPasswordLength: 8,
+	}
 }
