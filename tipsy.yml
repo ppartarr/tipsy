@@ -108,7 +108,6 @@ correctors:
 smtp:
   server: smtp.gmail.com
   username: gotipsymail@gmail.com
-  # password: komrfmzkujebipru
-  password: "mlbmjxefxeijxihw"
+  password: ""
   port: 587
   from: gotipsymail@gmail.com
