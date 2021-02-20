@@ -28,10 +28,7 @@ func TestCheckOptimal(t *testing.T) {
 		t.Error("ball should be the set of strings containing the output of the correctors, unless it's in the blacklist")
 	}
 
-	ball = checker.CheckOptimal("password!", testFrequencyBlacklist, 10)
-	if !assert.ElementsMatch(t, ball, []string{}) {
-		t.Error("cutoff is 0, ball should be the empty set")
-	}
+	// Add more tests for optimal checker
 }
 
 func TestCalculateTypoProbability(t *testing.T) {
@@ -84,11 +81,6 @@ func TestFindProbabilityOfQthPassword(t *testing.T) {
 	if prob != float64(80)/float64(550) {
 		t.Error("should return the corrector prob")
 	}
-
-	prob = FindProbabilityOfQthPassword(testFrequencyBlacklist, 100)
-	if prob != 0 {
-		t.Error("should return -1 if index is out of bounds")
-	}
 }
 
 func TestFindOptimalSubset(t *testing.T) {
@@ -99,13 +91,11 @@ func TestFindOptimalSubset(t *testing.T) {
 		"foo":      0.1,
 	}
 	comb := FindOptimalSubset(ballProbability, 0.7)
-	fmt.Println("comb1", comb)
 	if !assert.ElementsMatch(t, comb.Passwords, []string{"hello"}) {
 		t.Error("find optimal subset should return the max")
 	}
 
 	comb = FindOptimalSubset(ballProbability, 0.75)
-	fmt.Println("comb2", comb)
 	if !assert.ElementsMatch(t, comb.Passwords, []string{"foo", "world"}) {
 		t.Error("find optimal subset should return the max <= cutoff")
 	}
