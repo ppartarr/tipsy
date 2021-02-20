@@ -2,6 +2,8 @@
 
 # tipsy 🍻
 ![go test](https://github.com/ppartarr/tipsy/actions/workflows/go.yml/badge.svg)
+![codeql scanning](https://github.com/ppartarr/tipsy/actions/workflows/codeql-analysis.yml/badge.svg)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Tipsy is a Go library that provides the building blocks for typo-tolerant authentication systems
 
