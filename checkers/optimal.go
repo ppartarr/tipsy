@@ -43,10 +43,17 @@ func (checker *Checker) CheckOptimal(submittedPassword string, frequencyBlacklis
 	return combinationToTry.Passwords
 }
 
+// FindFrequencyOfQthPassword given the blacklist, find the probability of the qth password in the distribution
+func FindFrequencyOfQthPassword(frequencyBlacklist map[string]int, q int) int {
+	sortedSlice := correctors.ConvertMapToSortedSlice(frequencyBlacklist)
+	return sortedSlice[q].Value
+}
+
 // FindProbabilityOfQthPassword given the blacklist, find the probability of the qth password in the distribution
 func FindProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) float64 {
 
 	if q >= len(frequencyBlacklist) {
+		log.Fatal("q is larger than the frequency list")
 		return 0
 	}
 
@@ -66,6 +73,7 @@ func FindProbabilityOfQthPassword(frequencyBlacklist map[string]int, q int) floa
 		}
 	}
 
+	log.Fatal("probability of qth password is 0")
 	return 0
 }
 
@@ -168,19 +176,21 @@ func (c *CombinationProbability) addProbability(probability float64) float64 {
 // e.g. given [a b c] will return [[a] [b] [c] [a b] [a c] [b c] [a b c]]
 func generateCombinations(passwordsInBall []string) [][]string {
 
-	combinations := make([][]string, int(math.Pow(2, float64(len(passwordsInBall)))))
+	combinations := make([][]string, int(math.Pow(2, float64(len(passwordsInBall))))-1)
 
+	cbx := 0
 	for i := 1; i <= len(passwordsInBall); i++ {
 		intCombinations := combin.Combinations(len(passwordsInBall), i)
 		for _, intCombination := range intCombinations {
 			wordSlice := make([]string, i)
 			for index, value := range intCombination {
 				wordSlice[index] = passwordsInBall[value]
-				// wordSlice = correctors.DeleteEmpty(wordSlice)
 			}
-			combinations = append(combinations, wordSlice)
+			combinations[cbx] = wordSlice
+			cbx++
 		}
 	}
+
 	return combinations
 }
 

@@ -24,14 +24,12 @@ func TestCheckOptimal(t *testing.T) {
 	checker := NewChecker(testTypos, topCorrectors)
 
 	ball := checker.CheckOptimal("password!", testFrequencyBlacklist, 5)
-	fmt.Println(ball)
 	if !assert.ElementsMatch(t, ball, []string{"Password!", "password"}) {
 		t.Error("ball should be the set of strings containing the output of the correctors, unless it's in the blacklist")
 	}
 
 	ball = checker.CheckOptimal("password!", testFrequencyBlacklist, 10)
-	fmt.Println(ball)
-	if !assert.ElementsMatch(t, ball, []string{"Password!"}) {
+	if !assert.ElementsMatch(t, ball, []string{}) {
 		t.Error("cutoff is 0, ball should be the empty set")
 	}
 }
@@ -41,7 +39,7 @@ func TestCalculateTypoProbability(t *testing.T) {
 
 	prob := checker.CalculateTypoProbability("same")
 
-	if prob != float64(testTypos["same"])/float64(95435) {
+	if prob != float64(testTypos["same"])/float64(96964) {
 		t.Error("calculate typo probability is not working...")
 	}
 
