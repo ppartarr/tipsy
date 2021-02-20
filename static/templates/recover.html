@@ -5,6 +5,9 @@
         <h1>Account Recovery</h1>
         <form action="/recover" method="post">
             <input id="email" type="text" placeholder="Email" name="email" required>
+            {{ with .Errors.Email }}
+                <p class="error">{{ . }}</p>
+            {{ end }}
             <button type="submit"><span>Login</span></button>
         </form>
         <p class="hidden">An email has been sent to your address. Please click the link to reset your password</p>

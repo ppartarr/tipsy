@@ -10,6 +10,7 @@ import (
 
 	"github.com/nbutton23/zxcvbn-go"
 	"github.com/ppartarr/tipsy/checkers"
+	"github.com/ppartarr/tipsy/config"
 	"github.com/ppartarr/tipsy/correctors"
 )
 
@@ -23,18 +24,13 @@ type ResetForm struct {
 }
 
 // Validate checks that the fields in the login form are set
-func (form *ResetForm) Validate(blacklistFile string, zxcvbnScore int, token *Token) bool {
+func (form *ResetForm) Validate(config *config.Server, zxcvbnScore int, token *ResetToken) bool {
 	form.Errors = make(map[string]string)
 
 	// check that username is an email address
 	match := rxEmail.Match([]byte(form.Email))
 	if match == false {
 		form.Errors["Email"] = "Email must be valid"
-	}
-
-	// check that the token matches the submitted user
-	if form.Email != token.Email {
-		form.Errors["Email"] = "submitted email & token email don't match"
 	}
 
 	// check if the TTL is still valid
@@ -52,9 +48,11 @@ func (form *ResetForm) Validate(blacklistFile string, zxcvbnScore int, token *To
 	}
 
 	// check if password is in blacklist
-	blacklist := checkers.LoadBlacklist(blacklistFile)
-	if correctors.StringInSlice(form.Password, blacklist) {
-		form.Errors["Password"] = "Password is forbidden"
+	if config.Checker.Blacklist != nil {
+		blacklist := checkers.LoadBlacklist(config.Checker.Blacklist.File)
+		if correctors.StringInSlice(form.Password, blacklist) {
+			form.Errors["Password"] = "Password is forbidden"
+		}
 	}
 
 	// only register password if strength estimation is high enough
@@ -63,6 +61,12 @@ func (form *ResetForm) Validate(blacklistFile string, zxcvbnScore int, token *To
 	log.Println(score)
 	if score.Score < zxcvbnScore {
 		form.Errors["Password"] = "Password should be at least " + strconv.Itoa(zxcvbnScore) + "/4 in zxcvbn"
+	}
+
+	// check if submitted token & user match
+	if token.Token != form.Token {
+		log.Println("submitted token doesn't match with the user")
+		form.Errors["Email"] = "Account hasn't requested a password reset"
 	}
 
 	return len(form.Errors) == 0
@@ -81,32 +85,22 @@ func (userService *UserService) PasswordReset(w http.ResponseWriter, r *http.Req
 		Token:        r.PostFormValue("token"),
 	}
 
-	// get token hash from form & get associated token from bucket
-	tokenHash := form.Token
-	token, err := userService.getToken(tokenHash)
+	// get user from db using submitted email
+	user, err := userService.getUser(form.Email)
 	if err != nil {
-		return nil, errors.New("could not get token")
+		form.Errors = make(map[string]string)
+		log.Println("could not get user" + form.Email + ": " + err.Error())
+		form.Errors["Email"] = "Email does not exist"
+		return form, errors.New("you must submit a valid form")
 	}
 
 	// validate form
-	if form.Validate(userService.config.Web.Register.Blacklist, userService.config.Web.Register.Zxcvbn, token) == false {
+	if form.Validate(userService.config, userService.config.Web.Register.Zxcvbn, user.ResetToken) == false {
 		log.Println(form.Errors)
 		return form, errors.New("you must submit a valid form")
 	}
 
-	log.Println(token)
-
-	// invalidate password reset token
-	err = userService.deleteToken(token)
-	if err != nil {
-		return nil, errors.New("error deleting the token" + err.Error())
-	}
-
-	// get user from db
-	user, err := userService.getUser(token.Email)
-	if err != nil {
-		return nil, errors.New("error getting the user: " + err.Error())
-	}
+	log.Println(user.ResetToken.Token)
 
 	// hash the input password
 	passwordHash, err := HashPassword(r.Form["password"][0])
@@ -114,11 +108,12 @@ func (userService *UserService) PasswordReset(w http.ResponseWriter, r *http.Req
 		return nil, errors.New("failed to hash the input password: " + err.Error())
 	}
 
-	// set new password & set login attempts to 0
+	// delete token, set new password, set login attempts to 0
+	user.ResetToken = nil
 	user.PasswordHash = passwordHash
 	user.LoginAttempts = 0
 
-	// update the user's password
+	// update the user
 	err = userService.updateUser(user)
 	if err != nil {
 		return nil, errors.New("failed to update the user's password: " + err.Error())

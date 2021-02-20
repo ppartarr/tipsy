@@ -21,18 +21,16 @@ type UserService struct {
 	typtop  *typtop.Checker
 }
 
-// User represents a user
 type User struct {
-	ID            int    `json:"id"`
-	Email         string `json:"email"`
-	PasswordHash  string `json:"password"`
-	LoginAttempts int    `json:"loginAttempts"`
+	ID            int         `json:"id"`
+	Email         string      `json:"email"`
+	PasswordHash  string      `json:"password"`
+	LoginAttempts int         `json:"loginAttempts"`
+	ResetToken    *ResetToken `json:"resetToken"`
 }
 
-// Token represents a password reset token
-type Token struct {
-	ID        int           `json:"id"`
-	Email     string        `json:"email"`
+// ResetToken represents a password reset token
+type ResetToken struct {
 	Token     string        `json:"token"`
 	CreatedAt time.Time     `json:"createdAt"`
 	TTL       time.Duration `json:"ttl"`

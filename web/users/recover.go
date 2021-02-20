@@ -50,23 +50,27 @@ func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.
 		return form, errors.New("you must submit a valid form")
 	}
 
-	log.Println("there")
+	// check that user doesn't have existing token
+	if user.ResetToken != nil {
+		log.Println("user already has a reset token")
+		form.Errors["Email"] = "User already has a reset token"
+		return form, errors.New("you must submit a valid form")
+	}
 
 	log.Println(userService.config.Web.Reset.TokenValidity)
 	log.Println(userService.config.Web.Reset.TokenValidity * time.Minute)
 
-	token := &Token{
-		Email:     form.Email,
+	resetToken := &ResetToken{
 		TTL:       userService.config.Web.Reset.TokenValidity,
 		CreatedAt: time.Now().Local(),
 	}
 
 	// generate token
-	token.Token = generateToken(user.Email)
+	resetToken.Token = generateToken(user.Email)
 
 	// store the token
-	log.Println(token)
-	err = userService.storeToken(token)
+	user.ResetToken = resetToken
+	err = userService.updateUser(user)
 	if err != nil {
 		return nil, errors.New("could not store token for user " + form.Email + ": " + err.Error())
 	}
@@ -75,7 +79,7 @@ func (userService *UserService) PasswordRecovery(w http.ResponseWriter, r *http.
 	go func() {
 		log.Println("sending password reset email")
 		// i hope this is safe
-		url := "http://localhost:8000/reset.html?token=" + token.Token
+		url := "http://localhost:8000/reset.html?token=" + user.ResetToken.Token
 		mail.Send(user.Email, "Tipsy password reset", mail.GeneratePasswordResetMail(url))
 	}()
 
