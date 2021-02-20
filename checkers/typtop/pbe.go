@@ -55,9 +55,7 @@ func deriveAESKey(password string, salt []byte) ([]byte, []byte) {
 }
 
 func aesEncrypt(password string, message []byte) []byte {
-	// TODO generate different salt for every user & store
-	salt := []byte("salt")
-
+	salt := make([]byte, 8)
 	key, salt := deriveAESKey(password, salt)
 
 	// create the aes block
@@ -80,13 +78,12 @@ func aesEncrypt(password string, message []byte) []byte {
 	}
 
 	// save the nonce as a prefix to the encrypted data
-	return gcm.Seal(initialisationVector, initialisationVector, []byte(message), nil)
+	return append(salt, gcm.Seal(initialisationVector, initialisationVector, []byte(message), nil)...)
 }
 
-func aesDecrypt(password string, ciphertext []byte) ([]byte, error) {
-	// TODO generate different salt for every user & store
-	salt := []byte("salt")
-
+func aesDecrypt(password string, saltAndCiphertext []byte) ([]byte, error) {
+	salt := saltAndCiphertext[:8]
+	ciphertext := saltAndCiphertext[8:]
 	key, salt := deriveAESKey(password, salt)
 
 	// create the aes block

@@ -7,7 +7,7 @@ Tipsy is a Go library that provides the building blocks for typo-tolerant authen
 ## Future work
 
 - [ ] check if user already has requested token before creating new one in PasswordReset before storeToken
-- [ ] use per-user salt
+- [x] use per-user salt in typtop
 - [ ] make PBE & PKE configurable
 - [ ] block attempts by IP
 - [ ] add support for whitespace passwords
