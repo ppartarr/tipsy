@@ -1,6 +1,7 @@
 <img src="static/images/gopher.png" alt="tipsy gopher" width="300" height="300"/>
 
 # tipsy 🍻
+![go test](https://github.com/ppartarr/tipsy/actions/workflows/go.yml/badge.svg)
 
 Tipsy is a Go library that provides the building blocks for typo-tolerant authentication systems
 
