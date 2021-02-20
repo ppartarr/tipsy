@@ -6,6 +6,7 @@ Tipsy is a Go library that provides the building blocks for typo-tolerant authen
 
 ## Future work
 
+- [ ] JS to collect data about users with password managers & how many typos could be corrected
 - [ ] check if user already has requested token before creating new one in PasswordReset before storeToken
 - [x] use per-user salt in typtop
 - [ ] make PBE & PKE configurable
@@ -48,3 +49,7 @@ go test -v -run TestPlot
     * https://github.com/schollz/pake
     * https://github.com/cretz/gopaque
     * https://github.com/frekui/opaque
+* Research
+    * [pASSWORD tYPOS and How to Correct Them Securely, Chatterjee et al., 2016](https://ieeexplore.ieee.org/document/7546536)
+    * [The TypTop System: Personalized Typo-Tolerant Password Checking, Chatterjee et al., 2017](https://eprint.iacr.org/2017/810.pdf)
+    * [Tipsy: How to Correct Password Typos Safely, Partarrieu, 2020](https://delaat.net/rp/2020-2021/p67/report.pdf)
