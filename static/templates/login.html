@@ -3,12 +3,16 @@
 <body>
     <div class="centered login">
         <h1>Login</h1>
-        <form action="/login" method="post">
+        <form action="/login" method="post" autocomplete="off">
             <input id="email" type="text" placeholder="Email" name="email" required>
-            <input id="password" type="password" placeholder="Password" name="password" required>
+            <input id="password" type="password" placeholder="Password" name="password" required onpaste="isPasted()">
             {{ with .Errors.Login }}
                 <p class="error">{{ . }}</p>
             {{ end }}
+            <input type="checkbox" name="pasted" id="pasted" value="true" hidden>
+            <noscript>
+                <input type="checkbox" name="nojs" id="nojs" value="true" hidden checked>
+            </noscript>
             <button type="submit"><span>Login</span></button>
         </form>
         <p>If you don't have an account
@@ -19,4 +23,7 @@
         </p>
     </div>
 </body>
+<footer>
+    <script type="text/javascript" src="/static/scripts/pasted.js"></script>
+</footer>
 {{end}}

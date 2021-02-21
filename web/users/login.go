@@ -17,6 +17,8 @@ import (
 type LoginForm struct {
 	Email    string
 	Password string
+	Pasted   string
+	NoJS     string
 	Errors   map[string]string
 }
 
@@ -35,6 +37,9 @@ func (form *LoginForm) Validate() bool {
 		form.Errors["Login"] = "Username and password incorrect"
 	}
 
+	// log pasted value
+	log.Println("user:", form.Email, " password:", form.Password, " pasted:", form.Pasted, " nojs:", form.NoJS)
+
 	return len(form.Errors) == 0
 }
 
@@ -52,6 +57,8 @@ func (userService *UserService) Login(w http.ResponseWriter, r *http.Request) (f
 	form = &LoginForm{
 		Email:    r.PostFormValue("email"),
 		Password: r.PostFormValue("password"),
+		Pasted:   r.PostFormValue("pasted"),
+		NoJS:     r.PostFormValue("nojs"),
 	}
 	if form.Validate() == false {
 		log.Println(form.Errors)
