@@ -55,4 +55,4 @@ go test -v -run TestPlot
 * Research
     * [pASSWORD tYPOS and How to Correct Them Securely, Chatterjee et al., 2016](https://ieeexplore.ieee.org/document/7546536)
     * [The TypTop System: Personalized Typo-Tolerant Password Checking, Chatterjee et al., 2017](https://eprint.iacr.org/2017/810.pdf)
-    * [Tipsy: How to Correct Password Typos Safely, Partarrieu, 2020](https://delaat.net/rp/2020-2021/p67/report.pdf)
+    * [Tipsy: How to Correct Password Typos Safely, Partarrieu, 2020](https://www.partarrieu.me/assets/research/tipsy.pdf)
